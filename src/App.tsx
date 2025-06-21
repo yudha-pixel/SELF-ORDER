@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Check } from 'lucide-react';
 import { Button } from './components/ui/button';
-// import FadeContent from './components/ui/FadeContent'
 
 import { MenuItem, CartItem, FavoriteItem, Order } from './types';
 import { menuItems } from './data/menuItems';
@@ -240,7 +239,7 @@ export default function App() {
           // The `transition-opacity` class tells the browser to animate any changes to opacity
           className={`absolute inset-0 ${
             // When `showNavDrawer` is true, we set the opacity. When false, we make it invisible.
-            showNavDrawer ? ' bg-black opacity-50 transition-opacity delay-300 duration-700 ease-out' : 'opacity-0 pointer-events-none'
+            showNavDrawer ? ' bg-black/50 transition-opacity delay-300 duration-700 ease-out' : 'opacity-0 pointer-events-none'
           }`}
           onClick={() => setShowNavDrawer(false)}
         />
@@ -257,15 +256,19 @@ export default function App() {
         </div>
       </div>
 
-      {showMenuDetail && selectedMenuItem && (
-        <MenuDetailOverlay
-          item={selectedMenuItem}
-          onClose={() => setShowMenuDetail(false)}
-          onAddToCart={addToCart}
-          onSaveFavorite={saveFavorite}
-          favorites={favorites}
-        />
-      )}
+      <div className={`fixed inset-0 z-50 ${
+        showMenuDetail ? 'translate-y-0 bg-black/30 transform transition-transform delay-500 duration-700 ease-in-out' : 'translate-y-full'
+      }`}>
+        {showMenuDetail && selectedMenuItem && (
+          <MenuDetailOverlay
+            item={selectedMenuItem}
+            onClose={() => setShowMenuDetail(false)}
+            onAddToCart={addToCart}
+            onSaveFavorite={saveFavorite}
+            favorites={favorites}
+          />
+        )}
+      </div>
 
       <div className="h-12 bg-white" />
 

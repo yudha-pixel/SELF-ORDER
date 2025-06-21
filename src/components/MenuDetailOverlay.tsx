@@ -80,7 +80,7 @@ export default function MenuDetailOverlay({ item, onClose, onAddToCart, onSaveFa
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-md h-[90vh] rounded-2xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom duration-300 ease-out flex flex-col">
         {/* Header Image */}
         <div className="relative h-64 bg-gray-200 overflow-hidden shrink-0">
