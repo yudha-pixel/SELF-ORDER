@@ -29,9 +29,11 @@ interface Order {
 interface OrderHistoryProps {
   orders: Order[];
   onBack: () => void;
+  // onOrderClick: (order: Order) => void;
   onReorder: (orderItems: CartItem[]) => void;
 }
 
+// export default function OrderHistory({ orders, onBack, onOrderClick, onReorder }: OrderHistoryProps) {
 export default function OrderHistory({ orders, onBack, onReorder }: OrderHistoryProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -132,7 +134,11 @@ export default function OrderHistory({ orders, onBack, onReorder }: OrderHistory
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
-              <div key={order.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+              <div 
+                key={order.id} 
+                // onClick={() => onOrderClick(order)}
+                className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+              
                 {/* Order Header */}
                 <div className="flex justify-between items-start mb-4">
                   <div>

@@ -1,6 +1,5 @@
-// src/App.tsx
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Button } from './components/ui/button';
 
 import { MenuItem, CartItem, FavoriteItem, Order } from './types';
@@ -17,6 +16,10 @@ import SearchSection from './components/SearchSection';
 import FavoritesSection from './components/FavoritesSection';
 import MenuItemComponent from './components/MenuItemComponent';
 import CartSummaryOverlay from './components/CartSummaryOverlay';
+import PaymentMethodOverlay from './components/PaymentMethodOverlay';
+import SettingsPage from './components/Settings';
+import PaymentSuccess from './components/PaymentSuccess';
+import OrderDetail from './components/OrderDetails';
 
 
 export default function App() {
@@ -35,6 +38,12 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showCart, setShowCart] = useState(false);
   const [showNavDrawer, setShowNavDrawer] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('QRIS');
+  const [showPaymentOverlay, setShowPaymentOverlay] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showOrderDetail, setShowOrderDetail] = useState(false);
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('coffee-favorites');
@@ -152,8 +161,10 @@ const toggleFavorite = (item: MenuItem, customizations: any, totalPrice: number)
     setOrders(updatedOrders);
     localStorage.setItem('coffee-orders', JSON.stringify(updatedOrders));
     
+    setCompletedOrder(order);
     setCart([]);
     setShowCart(false);
+    setShowPaymentSuccess(true);
   };
 
   const filteredItems = menuItems.filter(item => {
@@ -192,10 +203,22 @@ const toggleFavorite = (item: MenuItem, customizations: any, totalPrice: number)
     setShowNavDrawer(false);
   };
 
-  // const handleShowNotifications = ().
   const handleShowNotifications = () => {
     setShowNotifications(true);
     setShowNavDrawer(false);
+  };
+
+  const handleShowOrderDetail = (order: Order) => {
+    setSelectedOrder(order);
+    setShowOrderDetail(true);
+  };
+
+  const handlePaymentSuccessViewOrder = () => {
+    if (completedOrder) {
+      setShowPaymentSuccess(false);
+      setSelectedOrder(completedOrder);
+      setShowOrderDetail(true);
+    }
   };
 
   const resetToMainMenu = () => {
@@ -203,49 +226,75 @@ const toggleFavorite = (item: MenuItem, customizations: any, totalPrice: number)
     setShowSettings(false);
     setShowNotifications(false);
     setShowCart(false);
+    setShowPaymentSuccess(false);
+    setShowOrderDetail(false);
   };
-
-  if (showSettings) {
-    // return <SettingsPage onBack={resetToMainMenu} />;
-  }
-
-  if (showNotifications) {
-    return <NotificationsPage onBack={resetToMainMenu} />;
-  }
-
-  if (showOrderHistory) {
-    return (
-      <OrderHistory
-        orders={orders}
-        onBack={resetToMainMenu}
-        onReorder={(orderItems) => {
-          orderItems.forEach(item => {
-            const menuItem = menuItems.find(mi => mi.id === item.id);
-            if (menuItem) {
-              addToCart(menuItem, item.quantity, item.customizations);
-            }
-          });
-          setShowOrderHistory(false);
-        }}
-      />
-    );
-  }
-
-  if (showCart) {
-    return (
-      <Cart
-        items={cart}
-        onUpdateQuantity={updateCartItemQuantity}
-        onRemoveItem={removeFromCart}
-        onBack={() => setShowCart(false)}
-        onOrderComplete={handleOrderComplete}
-        total={cartTotal}
-      />
-    );
-  }
 
   return (
     <div className="relative size-full bg-white overflow-hidden">
+      
+      {/* =================================== */}
+      {/* 1. MAIN APP UI (Always in the background) */}
+      {/* =================================== */}
+      <div className="h-12 bg-white" />
+
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100 shadow-sm relative">
+        <div className="flex items-center px-5 py-4 justify-between">
+          <div className="w-8 flex justify-start">
+            <button 
+              onClick={() => setShowNavDrawer(true)}
+              className="relative w-8 h-8 rounded-lg transition-colors duration-200 hover:bg-gray-100 flex items-center justify-center"
+            >
+              <AnimatedHamburgerIcon isOpen={showNavDrawer} />
+            </button>
+          </div>
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <Logo />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Scrollable Content */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full overflow-y-auto">
+          <div className="py-6 space-y-6">
+            <SearchSection 
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+            />
+            {favorites.length > 0 && (<FavoritesSection 
+                favorites={favorites}
+                menuItems={menuItems}
+                onReorder={(favorite) => {
+                  const menuItem = menuItems.find(item => item.id === favorite.menuItemId);
+                  if (menuItem) {
+                    handleShowMenuDetail(menuItem, favorite.customizations);
+                  }
+                }}
+              />)
+            }
+            <div className="px-5 space-y-4 md:grid md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+              {filteredItems.map((item) => (
+                <MenuItemComponent
+                  key={item.id}
+                  item={item}
+                  onShowDetail={handleShowMenuDetail}
+                  onAddToCart={addToCart}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================================================= */}
+      {/* 2. OVERLAYS AND FULL-SCREEN VIEWS (Render on top) */}
+      {/* ================================================= */}
+
+      {/* Navigation Drawer */}
       <div className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out ${
         showNavDrawer ? 'translate-x-0' : '-translate-x-full'
       }`}>
@@ -270,94 +319,98 @@ const toggleFavorite = (item: MenuItem, customizations: any, totalPrice: number)
         </div>
       </div>
 
-      <div className={`fixed inset-0 z-50 ${
-        showMenuDetail ? 'translate-y-0 bg-black/30 transform transition-transform delay-500 duration-700 ease-in-out' : 'translate-y-full'
-      }`}>
-        {showMenuDetail && selectedMenuItem && (
-          <MenuDetailOverlay
-            item={selectedMenuItem}
-            onClose={() => {
-              setShowMenuDetail(false);
-              setInitialCustomizations(null);
-            }}
-            onAddToCart={addToCart}
-            onToggleFavorite={toggleFavorite}
-            favorites={favorites}
-            initialCustomizations={initialCustomizations}
+      {/* Menu Detail Overlay */}
+      {showMenuDetail && selectedMenuItem && (
+        <MenuDetailOverlay 
+          item={selectedMenuItem}
+          onClose={() => {
+            setShowMenuDetail(false);
+            setInitialCustomizations(null);
+          }}
+          onAddToCart={addToCart}
+          onToggleFavorite={toggleFavorite}
+          favorites={favorites}
+          initialCustomizations={initialCustomizations}
+        />
+      )}
+      
+      {/* Cart Screen (Now treated as a full-screen overlay) */}
+      {showCart && (
+        <div className="fixed inset-0 z-40 bg-white">
+          <Cart
+            items={cart}
+            onUpdateQuantity={updateCartItemQuantity}
+            onRemoveItem={removeFromCart}
+            onBack={() => setShowCart(false)}
+            onOrderComplete={handleOrderComplete}
+            total={cartTotal}
+            paymentMethod={paymentMethod}
+            onShowPaymentOverlay={() => setShowPaymentOverlay(true)}
           />
-        )}
-      </div>
-
-      <div className="h-12 bg-white" />
-
-      <div className="bg-white border-b border-gray-100 shadow-sm relative">
-        <div className="flex items-center px-5 py-4 justify-between">
-          <div className="w-8 flex justify-start">
-            <button 
-              onClick={() => setShowNavDrawer(true)}
-              className="relative w-8 h-8 rounded-lg transition-colors duration-200 hover:bg-gray-100 flex items-center justify-center"
-            >
-              <AnimatedHamburgerIcon isOpen={showNavDrawer} />
-            </button>
-          </div>
-          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <Logo />
-          </div>
-          <div className="w-8 flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCart(true)}
-              className="relative rounded-full border-2 border-[#84482b] hover:bg-[#84482b] hover:text-white transition-all duration-200"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              {cartItemsCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center animate-pulse">
-                  {cartItemsCount}
-                </span>
-              )}
-            </Button>
-          </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          <div className="py-6 space-y-6">
-            <SearchSection 
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedCategory={selectedCategory}
-              onCategoryChange={setSelectedCategory}
-            />
-            
-            {favorites.length > 0 && (
-              <FavoritesSection 
-                favorites={favorites}
-                menuItems={menuItems}
-                onReorder={(favorite) => {
-                  const menuItem = menuItems.find(item => item.id === favorite.menuItemId);
-                  if (menuItem) {
-                    handleShowMenuDetail(menuItem, favorite.customizations);
-                  }
-                }}
-              />
-            )}
-            
-            <div className="px-5 space-y-4 md:grid md:grid-cols-2 md:gap-4 lg:grid-cols-3">
-              {filteredItems.map((item) => (
-                <MenuItemComponent
-                  key={item.id}
-                  item={item}
-                  onShowDetail={handleShowMenuDetail}
-                  onAddToCart={addToCart}
-                />
-              ))}
-            </div>
-          </div>
+      {/* Order History Screen */}
+      {showOrderHistory && (
+        <div className="fixed inset-0 z-40 bg-white">
+          <OrderHistory
+            orders={orders}
+            onBack={resetToMainMenu}
+            // onOrderClick={handleShowOrderDetail}
+            onReorder={(orderItems) => {
+              orderItems.forEach(item => {
+                const menuItem = menuItems.find(mi => mi.id === item.id);
+                if (menuItem) {
+                  addToCart(menuItem, item.quantity, item.customizations);
+                }
+              });
+              setShowOrderHistory(false);
+            }}
+          />
         </div>
-      </div>
+      )}
+      
+      {/* Notifications Screen */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-40 bg-white">
+          <NotificationsPage onBack={resetToMainMenu} />
+        </div>
+      )}
 
+      {/* Setting Screen */}
+      {showSettings && (
+        <div className="fixed inset-0 z-40 bg-white">
+          <SettingsPage
+            onBack={resetToMainMenu}
+          />
+        </div>
+      )}
+
+      {/* Success Payment */}
+      {showPaymentSuccess && completedOrder && (
+        <div className="fixed inset-0 z-40 bg-white">
+          <PaymentSuccess
+            order={completedOrder}
+            onContinue={resetToMainMenu}
+            onViewOrder={handlePaymentSuccessViewOrder}
+          />
+        </div>
+      )}
+
+
+      {/* Payment Method Overlay (Highest z-index) */}
+      {showPaymentOverlay && (
+        <PaymentMethodOverlay
+          currentMethod={paymentMethod}
+          onClose={() => setShowPaymentOverlay(false)}
+          onSelect={(method) => {
+            setPaymentMethod(method);
+            setShowPaymentOverlay(false);
+          }}
+        />
+      )}
+
+      {/* Cart Summary & Added Item Notifications */}
       {showAddedNotification && addedItem && (
         <div className={`fixed bottom-0 left-0 right-0 z-40 transform transition-all duration-300 ease-in-out ${
           showAddedNotification ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
@@ -384,7 +437,6 @@ const toggleFavorite = (item: MenuItem, customizations: any, totalPrice: number)
         </div>
       )}
 
-      {/* It will only show if the cart has items AND the full cart isn't already visible */}
       {cart.length > 0 && !showCart && (
         <CartSummaryOverlay
           itemCount={cartItemsCount}

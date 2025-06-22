@@ -1,5 +1,6 @@
 import { X, Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
+import qrisLogo from '@/assets/qris-logo.svg';
 import imgLogo from '@/assets/LogoVector.svg';
 
 interface CartItem {
@@ -25,19 +26,31 @@ interface CartProps {
   onBack: () => void;
   onOrderComplete: () => void;
   total: number;
+  paymentMethod: string;
+  onShowPaymentOverlay: () => void;
 }
 
-export default function Cart({ items, onUpdateQuantity, onRemoveItem, onBack, onOrderComplete, total }: CartProps) {
-  const handlePlaceOrder = () => {
-    const orderConfirmation = window.confirm(
-      `Place order for Rp ${total.toLocaleString()}?\n\nThis will add the order to your history and clear your cart.`
-    );
-    
-    if (orderConfirmation) {
-      onOrderComplete();
-      alert('Order placed successfully! You can track it in "My Orders".');
+const PaymentIcon = ({ method }: { method: string }) => {
+    if (method === 'QRIS') {
+        return <img src={qrisLogo} alt="QRIS" className="h-6" />;
     }
-  };
+    return <div className="w-8 h-8 bg-gray-200 rounded-md" />;
+};
+
+export default function Cart({
+  items,
+  onUpdateQuantity,
+  onRemoveItem,
+  onBack,
+  onOrderComplete,
+  total,
+  paymentMethod,
+  onShowPaymentOverlay
+}: CartProps) {
+  
+  const serviceFee = 4800;
+  const tax = total * 0.11;
+  const grandTotal = total + tax + serviceFee;
 
   return (
     <div className="relative size-full bg-white">
@@ -167,45 +180,47 @@ export default function Cart({ items, onUpdateQuantity, onRemoveItem, onBack, on
 
       {/* Footer with Total and Checkout */}
       {items.length > 0 && (
-        <div className="border-t border-gray-200 p-5 bg-white">
-          <div className="space-y-4">
-            {/* Order Summary */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium text-gray-900">Rp {total.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Service Fee</span>
-                <span className="font-medium text-gray-900">Rp 2,000</span>
-              </div>
-              <div className="border-t border-gray-200 pt-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-900">Total</span>
-                  <span className="text-xl font-bold text-[#84482b]">
-                    Rp {(total + 2000).toLocaleString()}
-                  </span>
+        <div className="border-t border-gray-200 p-5 bg-white space-y-4">
+          
+          {/* Detailed Summary */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-gray-600"><p>Subtotal</p><p>Rp {total.toLocaleString()}</p></div>
+            <div className="flex justify-between text-gray-600"><p>Tax (11%)</p><p>Rp {tax.toLocaleString()}</p></div>
+            <div className="flex justify-between text-gray-600"><p>Service Fee</p><p>Rp {serviceFee.toLocaleString()}</p></div>
+            <div className="border-t border-dashed my-2"></div>
+            <div className="flex justify-between font-bold text-lg text-gray-900">
+              <p>Grand Total</p><p>Rp {grandTotal.toLocaleString()}</p>
+            </div>
+          </div>
+          
+          {/* Payment Option Section */}
+          <div className="border-t border-gray-200 pt-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Payment Option</p>
+                <div className="flex items-center space-x-2">
+                  <PaymentIcon method={paymentMethod} />
+                  <span className="font-semibold text-gray-900">{paymentMethod}</span>
                 </div>
               </div>
-            </div>
-
-            <Button 
-              className="w-full bg-[#84482b] hover:bg-[#6d3a23] text-white py-4 text-lg font-semibold rounded-xl"
-              onClick={handlePlaceOrder}
-            >
-              Place Order - Rp {(total + 2000).toLocaleString()}
-            </Button>
-            
-            <div className="text-center">
               <Button
-                variant="ghost"
-                onClick={onBack}
-                className="text-[#84482b] hover:bg-[#84482b]/10 font-medium"
+                variant="outline"
+                size="sm"
+                onClick={onShowPaymentOverlay}
+                className="rounded-full"
               >
-                Continue Shopping
+                Change
               </Button>
             </div>
           </div>
+
+          {/* Final "Pay" Button */}
+          <Button 
+            className="w-full bg-[#84482b] hover:bg-[#6d3a23] text-white py-4 text-lg font-semibold rounded-xl"
+            onClick={onOrderComplete}
+          >
+            Pay
+          </Button>
         </div>
       )}
 
