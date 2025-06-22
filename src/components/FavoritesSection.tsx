@@ -12,7 +12,7 @@ export default function FavoritesSection({
   onReorder: (favorite: FavoriteItem) => void;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="px-5 space-y-3">
       <h3 className="font-semibold text-gray-900">Quick Reorder</h3>
       <div className="flex space-x-3 overflow-x-auto pb-2">
         {favorites.slice(0, 5).map((favorite) => {

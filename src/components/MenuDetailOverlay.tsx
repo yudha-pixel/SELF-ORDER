@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Minus, Plus, Heart } from 'lucide-react';
+import { FavoriteItem } from '@/types';
 
 interface MenuItem {
   id: string;
@@ -19,14 +20,15 @@ interface MenuDetailOverlayProps {
   item: MenuItem;
   onClose: () => void;
   onAddToCart: (item: MenuItem, quantity: number, customizations: any) => void;
-  onSaveFavorite: (item: MenuItem, customizations: any, totalPrice: number) => void;
+  onToggleFavorite: (item: MenuItem, customizations: any, totalPrice: number) => void;
   favorites: any[];
+  initialCustomizations?: FavoriteItem['customizations'] | null;
 }
 
-export default function MenuDetailOverlay({ item, onClose, onAddToCart, onSaveFavorite, favorites }: MenuDetailOverlayProps) {
+export default function MenuDetailOverlay({ item, onClose, onAddToCart, onToggleFavorite, favorites, initialCustomizations, }: MenuDetailOverlayProps) {
   const [selectedSize, setSelectedSize] = useState('Regular');
   const [selectedMilk, setSelectedMilk] = useState('Regular Milk');
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(initialCustomizations?.notes || '');
   const [quantity, setQuantity] = useState(1);
 
   const sizeOptions = [
@@ -34,6 +36,8 @@ export default function MenuDetailOverlay({ item, onClose, onAddToCart, onSaveFa
     { name: 'Regular', price: item.sizePricing.Regular },
     { name: 'Large', price: item.sizePricing.Large }
   ];
+
+  const isFavorite = favorites.some(fav => fav.menuItemId === item.id);
 
   const milkOptions = [
     { name: 'Regular Milk', price: 0 },
@@ -67,21 +71,24 @@ export default function MenuDetailOverlay({ item, onClose, onAddToCart, onSaveFa
     onClose();
   };
 
-  const handleSaveFavorite = () => {
+  const handleToggleFavorite = () => {
     const customizations = {
       size: selectedSize,
       milk: selectedMilk,
       notes
     };
-
-    onSaveFavorite(item, customizations, calculateTotalPrice() / quantity);
-    favorites = favorites
-    alert('Added to favorites!');
+    // Call the new toggle function passed from App.tsx
+    onToggleFavorite(item, customizations, calculateTotalPrice() / quantity);
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md h-[90vh] rounded-2xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom duration-300 ease-out flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+      onClick={onClose}>
+      <div 
+        className="bg-white w-full max-w-md h-[90vh] rounded-2xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom duration-300 ease-out flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+        >
         {/* Header Image */}
         <div className="relative h-64 bg-gray-200 overflow-hidden shrink-0">
           <div
@@ -100,10 +107,15 @@ export default function MenuDetailOverlay({ item, onClose, onAddToCart, onSaveFa
 
           {/* Favorite button */}
           <button
-            onClick={handleSaveFavorite}
+            onClick={handleToggleFavorite}
             className="absolute top-4 left-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors"
           >
-            <Heart className="w-5 h-5 text-gray-600" />
+            <Heart
+              // Conditionally apply styles to the icon
+              className={`w-5 h-5 transition-all duration-200 ${
+                isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-600'
+              }`}
+            />
           </button>
         </div>
 

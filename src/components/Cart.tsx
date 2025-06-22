@@ -1,4 +1,4 @@
-import { ArrowLeft, Minus, Plus, Trash2 } from 'lucide-react';
+import { X, Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import imgLogo from '@/assets/LogoVector.svg';
 
@@ -41,20 +41,22 @@ export default function Cart({ items, onUpdateQuantity, onRemoveItem, onBack, on
 
   return (
     <div className="relative size-full bg-white">
+      <div className="h-12 bg-white" />
+      
       {/* Header */}
-      <div className="bg-[#167dda] h-16 overflow-clip relative shrink-0 w-full">
+      <div className="bg-white h-16 overflow-clip relative shrink-0 w-full">
         <div className="flex flex-row items-center relative size-full px-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="text-white hover:bg-white/20 p-2"
+            className="text-black hover:bg-white/20 p-2"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <X className="h-5 w-5" />
           </Button>
           
           <div className="flex-1 flex justify-center">
-            <h1 className="text-xl font-bold text-white">Shopping Cart</h1>
+            <h1 className="text-xl font-bold text-black">Order Confirmation</h1>
           </div>
           
           <div className="w-10"></div> {/* Spacer for centering */}

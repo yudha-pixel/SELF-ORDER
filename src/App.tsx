@@ -16,6 +16,8 @@ import Logo from './components/Logo';
 import SearchSection from './components/SearchSection';
 import FavoritesSection from './components/FavoritesSection';
 import MenuItemComponent from './components/MenuItemComponent';
+import CartSummaryOverlay from './components/CartSummaryOverlay';
+
 
 export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -23,6 +25,7 @@ export default function App() {
   const [addedItem, setAddedItem] = useState<CartItem | null>(null);
   const [showMenuDetail, setShowMenuDetail] = useState(false);
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
+  const [initialCustomizations, setInitialCustomizations] = useState<FavoriteItem['customizations'] | null>(null);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -46,17 +49,27 @@ export default function App() {
     }
   }, []);
 
-  const saveFavorite = (item: MenuItem, customizations: any, totalPrice: number) => {
-    const favorite: FavoriteItem = {
-      id: Date.now().toString(),
-      menuItemId: item.id,
-      name: `${item.name} (${customizations.size})`,
-      customizations,
-      totalPrice,
-      savedAt: new Date()
-    };
+const toggleFavorite = (item: MenuItem, customizations: any, totalPrice: number) => {
+    const existingIndex = favorites.findIndex(fav => fav.menuItemId === item.id);
 
-    const updatedFavorites = [...favorites, favorite];
+    let updatedFavorites;
+
+    if (existingIndex >= 0) {
+      // Item is already a favorite, so REMOVE it
+      updatedFavorites = favorites.filter((_, index) => index !== existingIndex);
+    } else {
+      // Item is not a favorite, so ADD it
+      const favorite: FavoriteItem = {
+        id: Date.now().toString(),
+        menuItemId: item.id,
+        name: `${item.name} (${customizations.size})`,
+        customizations,
+        totalPrice,
+        savedAt: new Date()
+      };
+      updatedFavorites = [...favorites, favorite];
+    }
+    
     setFavorites(updatedFavorites);
     localStorage.setItem('coffee-favorites', JSON.stringify(updatedFavorites));
   };
@@ -118,8 +131,9 @@ export default function App() {
     );
   };
 
-  const handleShowMenuDetail = (item: MenuItem) => {
+  const handleShowMenuDetail = (item: MenuItem, customizations: FavoriteItem['customizations'] | null = null) => {
     setSelectedMenuItem(item);
+    setInitialCustomizations(customizations); // Set the customizations to be passed to the overlay
     setShowMenuDetail(true);
   };
 
@@ -262,10 +276,14 @@ export default function App() {
         {showMenuDetail && selectedMenuItem && (
           <MenuDetailOverlay
             item={selectedMenuItem}
-            onClose={() => setShowMenuDetail(false)}
+            onClose={() => {
+              setShowMenuDetail(false);
+              setInitialCustomizations(null);
+            }}
             onAddToCart={addToCart}
-            onSaveFavorite={saveFavorite}
+            onToggleFavorite={toggleFavorite}
             favorites={favorites}
+            initialCustomizations={initialCustomizations}
           />
         )}
       </div>
@@ -320,7 +338,7 @@ export default function App() {
                 onReorder={(favorite) => {
                   const menuItem = menuItems.find(item => item.id === favorite.menuItemId);
                   if (menuItem) {
-                    addToCart(menuItem, 1, favorite.customizations);
+                    handleShowMenuDetail(menuItem, favorite.customizations);
                   }
                 }}
               />
@@ -332,6 +350,7 @@ export default function App() {
                   key={item.id}
                   item={item}
                   onShowDetail={handleShowMenuDetail}
+                  onAddToCart={addToCart}
                 />
               ))}
             </div>
@@ -363,6 +382,15 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* It will only show if the cart has items AND the full cart isn't already visible */}
+      {cart.length > 0 && !showCart && (
+        <CartSummaryOverlay
+          itemCount={cartItemsCount}
+          totalPrice={cartTotal}
+          onContinue={() => setShowCart(true)}
+        />
       )}
     </div>
   );

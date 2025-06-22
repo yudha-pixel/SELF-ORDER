@@ -2,9 +2,26 @@
 import { MenuItem } from '../types';
 import svgPaths from "../imports/svg-zotrlrl93e";
 
-export default function MenuItemComponent({ item, onShowDetail }: { item: MenuItem; onShowDetail: (item: MenuItem) => void }) {
+interface MenuItemComponentProps {
+  item: MenuItem;
+  onShowDetail: (item: MenuItem) => void;
+  onAddToCart: (item: MenuItem, quantity?: number, customizations?: any) => void;
+}
+
+export default function MenuItemComponent({ item, onShowDetail, onAddToCart}: MenuItemComponentProps) {
+    // 2. Create a new handler specifically for the button click
+  const handleAddToCartClick = (e: React.MouseEvent) => {
+    // This stops the click from triggering the card's onClick event
+    e.stopPropagation();
+
+    // Call the addToCart function with the item and default values
+    onAddToCart(item, 1, { size: 'Regular', milk: 'Regular Milk', notes: '' });
+  };
+  
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200">
+    <div
+      onClick={() => onShowDetail(item)}
+      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200">
       <div className="p-4">
         <div className="flex space-x-4">
           <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden shrink-0">
@@ -23,14 +40,11 @@ export default function MenuItemComponent({ item, onShowDetail }: { item: MenuIt
             <div className="flex justify-between items-center mt-3">
               <div className="space-y-1">
                 <div className="font-bold text-lg text-gray-900">
-                  From Rp {item.sizePricing.Small.toLocaleString()}
-                </div>
-                <div className="text-xs text-gray-500">
-                  Regular: Rp {item.sizePricing.Regular.toLocaleString()}
+                  Rp {item.sizePricing.Small.toLocaleString()}
                 </div>
               </div>
               <button
-                onClick={() => onShowDetail(item)}
+                onClick={handleAddToCartClick}
                 className="bg-[#84482b] text-white px-4 py-2 rounded-xl hover:bg-[#6d3a23] transition-colors duration-200 flex items-center space-x-2"
               >
                 <span className="text-sm font-medium">Add</span>
