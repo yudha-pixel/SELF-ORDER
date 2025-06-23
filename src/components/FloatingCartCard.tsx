@@ -1,6 +1,5 @@
-import { ShoppingCart, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from './ui/button';
-import exampleImage from 'figma:asset/dceb62506b1b6da754f8d33b25b3bb229287154f.png';
 
 interface CartItem {
   id: string;

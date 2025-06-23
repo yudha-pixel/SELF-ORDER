@@ -53,7 +53,8 @@ export default function Payment({
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCashQR, setShowCashQR] = useState(false);
-  const [cashCode, setCashCode] = useState('');
+  // const [cashCode, setCashCode] = useState('');
+  const [cashCode] = useState('');
   const [copied, setCopied] = useState(false);
 
   const paymentMethods = [
@@ -79,17 +80,17 @@ export default function Payment({
 
   const finalTotal = total + 2000; // Include service fee
 
-  const generateCashCode = () => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    setCashCode(code);
-    return code;
-  };
+  // const generateCashCode = () => {
+  //   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  //   setCashCode(code);
+  //   return code;
+  // };
 
   const handlePaymentMethodSelect = (methodId: string) => {
     setSelectedPaymentMethod(methodId);
     
     if (methodId === 'cash') {
-      const code = generateCashCode();
+      // const code = generateCashCode();
       setShowCashQR(true);
     } else {
       setShowCashQR(false);
@@ -160,9 +161,9 @@ export default function Payment({
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">
                     {item.name}
-                    {item.customizations?.size !== 'Regular' && ` (${item.customizations.size})`}
+                    {item.customizations && item.customizations.size !== 'Regular' && ` (${item.customizations.size})`}
                   </p>
-                  {item.customizations?.milk !== 'Regular' && (
+                  {item.customizations && item.customizations.milk !== 'Regular' && (
                     <p className="text-sm text-gray-500">• {item.customizations.milk}</p>
                   )}
                   <p className="text-sm text-gray-500">Qty: {item.quantity}</p>

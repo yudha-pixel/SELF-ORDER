@@ -56,7 +56,7 @@ export default function Cart({
   onBack,
   onApplyVoucher,
   onRemoveVoucher,
-  onProceedToPayment,
+  // onProceedToPayment,
   onPaymentComplete
 }: CartProps) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');

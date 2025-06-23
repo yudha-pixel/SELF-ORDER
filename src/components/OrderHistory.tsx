@@ -1,7 +1,8 @@
-import { ArrowLeft, Clock, CheckCircle, Coffee, RotateCcw, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, Coffee, RotateCcw, ChevronRight, Utensils } from 'lucide-react';
 import { Button } from './ui/button';
 import LogoWhite from '../assets/LogoWhite.png';
 
+// FIX: Updated CartItem interface to match App.tsx
 interface CartItem {
   id: string;
   name: string;
@@ -13,60 +14,71 @@ interface CartItem {
   customizations?: {
     size: string;
     milk: string;
-    toppings?: string[];
+    toppings?: string[]; // Made toppings optional to match other definitions
     notes: string;
   };
 }
 
+// FIX: Updated Order interface to match App.tsx
 interface Order {
   id: string;
   items: CartItem[];
   total: number;
   orderDate: Date;
-  status: 'completed' | 'preparing' | 'ready';
+  status: 'completed' | 'preparing' | 'ready' | 'served' | 'done';
 }
 
 interface OrderHistoryProps {
   orders: Order[];
   onBack: () => void;
-  onOrderClick: (order: Order) => void;
+  // onOrderClick: (order: Order) => void;
   onReorder: (orderItems: CartItem[]) => void;
 }
 
-export default function OrderHistory({ orders, onBack, onOrderClick, onReorder }: OrderHistoryProps) {
-  const getStatusIcon = (status: string) => {
+// export default function OrderHistory({ orders, onBack, onOrderClick, onReorder }: OrderHistoryProps) {
+export default function OrderHistory({ orders, onBack, onReorder }: OrderHistoryProps) {
+  const getStatusIcon = (status: Order['status']) => {
     switch (status) {
       case 'preparing':
         return <Clock className="w-5 h-5 text-orange-500" />;
       case 'ready':
         return <Coffee className="w-5 h-5 text-blue-500" />;
+      case 'served':
+        return <Utensils className="w-5 h-5 text-green-500" />;
       case 'completed':
+      case 'done':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       default:
         return <Clock className="w-5 h-5 text-gray-500" />;
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: Order['status']) => {
     switch (status) {
       case 'preparing':
         return 'Preparing';
       case 'ready':
         return 'Ready for Pickup';
+      case 'served':
+        return 'Served';
       case 'completed':
+      case 'done':
         return 'Completed';
       default:
         return 'Unknown';
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case 'preparing':
         return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'ready':
         return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'served':
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'completed':
+      case 'done':
         return 'bg-green-100 text-green-800 border-green-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -136,7 +148,7 @@ export default function OrderHistory({ orders, onBack, onOrderClick, onReorder }
               <div 
                 key={order.id} 
                 className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => onOrderClick(order)}
+                // onClick={() => onOrderClick(order)}
               >
                 {/* Order Header */}
                 <div className="flex justify-between items-start mb-4">

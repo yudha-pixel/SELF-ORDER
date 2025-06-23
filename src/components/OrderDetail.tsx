@@ -1,7 +1,8 @@
-import { ArrowLeft, Clock, CheckCircle, Utensils, HelpCircle, RefreshCw, MessageCircle, MapPin, Package, Truck } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, Utensils, HelpCircle, RefreshCw, MessageCircle, MapPin, Package } from 'lucide-react';
 import { Button } from './ui/button';
 import LogoWhite from '../assets/LogoWhite.png';
 
+// FIX: Updated CartItem interface to match App.tsx
 interface CartItem {
   id: string;
   name: string;
@@ -18,6 +19,7 @@ interface CartItem {
   };
 }
 
+// FIX: Updated Order interface to match App.tsx
 interface Order {
   id: string;
   items: CartItem[];
@@ -38,7 +40,7 @@ interface OrderDetailProps {
   order: Order;
   onBack: () => void;
   onContactSupport: () => void;
-  onAddToCart: (items: CartItem[]) => void; // Changed from onReorder
+  onAddToCart: (items: CartItem[]) => void;
 }
 
 export default function OrderDetail({ order, onBack, onContactSupport, onAddToCart }: OrderDetailProps) {
@@ -151,12 +153,12 @@ export default function OrderDetail({ order, onBack, onContactSupport, onAddToCa
     }
   ];
 
-  const generateQRCodeData = () => {
-    if (order.cashPaymentCode) {
-      return `CASH_PAYMENT:${order.cashPaymentCode}:${order.total}:${order.id}`;
-    }
-    return '';
-  };
+  // const generateQRCodeData = () => {
+  //   if (order.cashPaymentCode) {
+  //     return `CASH_PAYMENT:${order.cashPaymentCode}:${order.total}:${order.id}`;
+  //   }
+  //   return '';
+  // };
 
   return (
     <div className="relative size-full bg-white dark:bg-gray-900">
@@ -339,12 +341,12 @@ export default function OrderDetail({ order, onBack, onContactSupport, onAddToCa
                 </div>
                 
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                  <p className="font-medium text-gray-900">
                     {item.name}
-                    {item.customizations?.size !== 'Regular' && ` (${item.customizations.size})`}
-                  </h4>
-                  {item.customizations?.milk !== 'Regular' && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">• {item.customizations.milk}</p>
+                    {item.customizations && item.customizations.size !== 'Regular' && ` (${item.customizations.size})`}
+                  </p>
+                  {item.customizations && item.customizations.milk !== 'Regular' && (
+                    <p className="text-sm text-gray-500">• {item.customizations.milk}</p>
                   )}
                   {item.customizations?.notes && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">Note: {item.customizations.notes}</p>

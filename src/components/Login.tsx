@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, MessageCircle, AlertCircle, Phone } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Phone } from 'lucide-react';
 import { Button } from './ui/button';
 import LogoWhite from "../assets/LogoWhite.png";
 import LogVector from "../assets/LogoVector.svg";

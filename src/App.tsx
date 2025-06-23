@@ -576,7 +576,8 @@ export default function App() {
   };
 
   // Handle login with notification
-  const handleLogin = (email: string, password: string) => {
+  // const handleLogin = (email: string, password: string) => {
+  const handleLogin = (email: string) => {
     const userData: User = {
       id: Date.now().toString(),
       name: email.split('@')[0],
@@ -783,7 +784,8 @@ export default function App() {
     }
   };
 
-  const handlePaymentComplete = (paymentMethod: string, transactionId: string, voucherCode?: string) => {
+  // const handlePaymentComplete = (paymentMethod: string, transactionId: string, voucherCode?: string) => {
+  const handlePaymentComplete = (paymentMethod: string, transactionId: string) => {
     if (cart.length === 0) return;
 
     const tableNumber = `T${Math.floor(Math.random() * 50) + 1}`;
@@ -818,13 +820,13 @@ export default function App() {
   };
 
   // Update order status
-  const updateOrderStatus = (orderId: string, status: Order['status']) => {
-    const updatedOrders = orders.map(order => 
-      order.id === orderId ? { ...order, status } : order
-    );
-    setOrders(updatedOrders);
-    localStorage.setItem('coffee-orders', JSON.stringify(updatedOrders));
-  };
+  // const updateOrderStatus = (orderId: string, status: Order['status']) => {
+  //   const updatedOrders = orders.map(order => 
+  //     order.id === orderId ? { ...order, status } : order
+  //   );
+  //   setOrders(updatedOrders);
+  //   localStorage.setItem('coffee-orders', JSON.stringify(updatedOrders));
+  // };
 
   // Handle feedback submission
   const handleFeedbackSubmission = (orderId: string, rating: number, feedback: string) => {
@@ -883,7 +885,7 @@ export default function App() {
     }
   });
 
-  const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0);
+  // const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0);
   const cartSubtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   const cartDiscount = calculateDiscount(cartSubtotal, appliedVoucher);
   const cartTotal = cartSubtotal - cartDiscount;
@@ -1118,7 +1120,7 @@ export default function App() {
       <OrderHistory
         orders={orders}
         onBack={resetToMainMenu}
-        onOrderClick={handleShowOrderDetail}
+        // onOrderClick={handleShowOrderDetail}
         onReorder={(orderItems) => {
           orderItems.forEach(item => {
             const menuItem = menuItems.find(mi => mi.id === item.id);
@@ -1442,7 +1444,8 @@ function ErrorState({
     }
   };
 
-  const { icon, title, message, variant } = getErrorContent();
+  // const { icon, title, message, variant } = getErrorContent();
+  const { icon, title, message } = getErrorContent();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-6">

@@ -1,4 +1,4 @@
-import { Check, Clock, MapPin, Phone, MessageCircle, Eye } from 'lucide-react';
+import { Check, Clock, Phone, MessageCircle, Eye } from 'lucide-react';
 import { Button } from './ui/button';
 import LogoWhite from "../assets/LogoWhite.png";
 
@@ -160,9 +160,9 @@ export default function PaymentSuccess({ order, onContinue, onViewOrder, onConta
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">
                     {item.name}
-                    {item.customizations?.size !== 'Regular' && ` (${item.customizations.size})`}
+                    {item.customizations && item.customizations.size !== 'Regular' && ` (${item.customizations.size})`}
                   </p>
-                  {item.customizations?.milk !== 'Regular' && (
+                  {item.customizations && item.customizations.milk !== 'Regular' && (
                     <p className="text-sm text-gray-500">• {item.customizations.milk}</p>
                   )}
                   <p className="text-sm text-gray-500">Qty: {item.quantity}</p>

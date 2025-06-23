@@ -67,7 +67,7 @@ export default function MenuDetailOverlay({
 }: MenuDetailOverlayProps) {
   const [selectedSize, setSelectedSize] = useState('Regular');
   const [selectedMilk, setSelectedMilk] = useState('Regular');
-  const [toppings, setToppings] = useState<string[]>([]);
+  const [toppings] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
 
@@ -156,7 +156,7 @@ export default function MenuDetailOverlay({
                 </span>
               )}
               {item.isRecommended && (
-                <span className="inline-block bg-green-500 text-white text-sm px-3 py-1 rounded-full font-medium flex items-center space-x-1">
+                <span className="bg-green-500 text-white text-sm px-3 py-1 rounded-full font-medium flex items-center space-x-1">
                   <Star className="w-4 h-4 fill-current" />
                   <span>Recommended</span>
                 </span>

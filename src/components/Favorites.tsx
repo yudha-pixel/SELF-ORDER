@@ -3,21 +3,21 @@ import { ArrowLeft, Heart, Trash2, Plus, Coffee } from 'lucide-react';
 import { Button } from './ui/button';
 import LogoWhite from "../assets/LogoWhite.png";
 
-interface CartItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
-  quantity: number;
-  customizations?: {
-    size: string;
-    milk: string;
-    toppings: string[];
-    notes: string;
-  };
-}
+// interface CartItem {
+//   id: string;
+//   name: string;
+//   description: string;
+//   price: number;
+//   image: string;
+//   category: string;
+//   quantity: number;
+//   customizations?: {
+//     size: string;
+//     milk: string;
+//     toppings: string[];
+//     notes: string;
+//   };
+// }
 
 interface MenuItem {
   id: string;
@@ -73,7 +73,7 @@ export default function Favorites({
   favorites, 
   menuItems, 
   onRemoveFavorite, 
-  onReorder,
+  // onReorder,
   onAddToCart 
 }: FavoritesProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');

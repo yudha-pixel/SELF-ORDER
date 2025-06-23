@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ImageWithFallback } from './figma/ImageWithFallBack';
 
 interface LazyImageProps {
   src: string;
@@ -17,7 +17,7 @@ export default function LazyImage({
   alt,
   className = '',
   placeholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect width="400" height="300" fill="%23f3f4f6"/%3E%3Ctext x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%236b7280" font-family="Arial, sans-serif" font-size="14"%3ELoading...%3C/text%3E%3C/svg%3E',
-  fallback = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect width="400" height="300" fill="%23fee2e2"/%3E%3Ctext x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" fill="%23dc2626" font-family="Arial, sans-serif" font-size="12"%3EImage failed to load%3C/text%3E%3Ctext x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="%23dc2626" font-family="Arial, sans-serif" font-size="10"%3EClick to retry%3C/text%3E%3C/svg%3E',
+  // fallback = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect width="400" height="300" fill="%23fee2e2"/%3E%3Ctext x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" fill="%23dc2626" font-family="Arial, sans-serif" font-size="12"%3EImage failed to load%3C/text%3E%3Ctext x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="%23dc2626" font-family="Arial, sans-serif" font-size="10"%3EClick to retry%3C/text%3E%3C/svg%3E',
   threshold = 0.1,
   onLoad,
   onError
