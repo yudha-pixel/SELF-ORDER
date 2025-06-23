@@ -1,330 +1,68 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import svgPaths from "./imports/svg-zotrlrl93e";
 import LogoWhite from "./assets/LogoWhite.png";
 import LogoVector from "./assets/LogoVector.svg";
-import ImgCoffee from "./assets/Coffee.png";
 
-import { Check, User, Settings, Heart, Bell, History, LogOut, MessageCircle, FileText, Shield, HelpCircle, Minus, Plus, Star, Clock, TrendingUp, RefreshCw, Wifi, WifiOff, AlertTriangle } from 'lucide-react';
-import { Button } from './components/ui/button';
-import { Skeleton } from './components/ui/skeleton';
-import { Alert, AlertDescription } from './components/ui/alert';
-import Cart from './components/Cart';
-import PaymentSuccess from './components/PaymentSuccess';
-import MenuDetailOverlay from './components/MenuDetailOverlay';
-import OrderHistory from './components/OrderHistory';
-import OrderDetail from './components/OrderDetail';
-import SettingsPage from './components/Settings';
-import NotificationsPage from './components/Notifications';
-import Login from './components/Login.tsx';
-import Register from './components/Register';
-import Favorites from './components/Favorites';
-import FloatingCartCard from './components/FloatingCartCard';
-import ContactSupport from './components/ContactSupport';
-import DeveloperFeedback from './components/DeveloperFeedback';
-import TermsConditions from './components/TermsConditions';
-import PrivacyPolicy from './components/PrivacyPolicy';
-import LazyImage from './components/LazyImage';
+import {
+  Check,
+  User,
+  Settings,
+  Heart,
+  Bell,
+  History,
+  LogOut,
+  MessageCircle,
+  FileText,
+  Shield,
+  HelpCircle,
+  Minus,
+  Plus,
+  Star,
+  Clock,
+  TrendingUp,
+  RefreshCw,
+  Wifi,
+  WifiOff,
+  AlertTriangle,
+} from "lucide-react";
+import { Button } from "./components/ui/button";
+import { Skeleton } from "./components/ui/skeleton";
+import { Alert, AlertDescription } from "./components/ui/alert";
+import Cart from "./components/Cart";
+import PaymentSuccess from "./components/PaymentSuccess";
+import MenuDetailOverlay from "./components/MenuDetailOverlay";
+import OrderHistory from "./components/OrderHistory";
+import OrderDetail from "./components/OrderDetail";
+import SettingsPage from "./components/Settings";
+import NotificationsPage from "./components/Notifications";
+import Login from "./components/Login.tsx";
+import Register from "./components/Register";
+import Favorites from "./components/Favorites";
+import FloatingCartCard from "./components/FloatingCartCard";
+import ContactSupport from "./components/ContactSupport";
+import DeveloperFeedback from "./components/DeveloperFeedback";
+import TermsConditions from "./components/TermsConditions";
+import PrivacyPolicy from "./components/PrivacyPolicy";
+import LazyImage from "./components/LazyImage";
 
-interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  basePrice: number; // Default price
-  variants?: {
-    sizes?: {
-      Small: number; // Extra price (can be negative for discount)
-      Regular: number; // Usually 0 for base price
-      Large: number; // Extra price
-    };
-    milk?: {
-      Regular: number;
-      'Oat Milk': number;
-      'Almond Milk': number;
-      'Soy Milk': number;
-    };
-  };
-  image: string;
-  category: string;
-  isNew?: boolean;
-  isRecommended?: boolean;
-  orderCount?: number;
-  comboWith?: string[]; // IDs of recommended combo items
-}
+// Data Imports
+import { menuItems } from "./data/menuItems";
+import { availableVouchers } from "./data/vouchers";
+import { categories } from "./data/categories";
 
-interface CartItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
-  quantity: number;
-  customizations?: {
-    size: string;
-    milk: string;
-    toppings: string[];
-    notes: string;
-  };
-}
+// Type Imports
+import {
+  ProductProduct,
+  CartItem,
+  FavoriteItem,
+  OrderItem,
+  OrderHistoryItem,
+  UserUser,
+  Voucher,
+  Notification,
+} from "./types";
 
-interface FavoriteItem {
-  id: string;
-  menuItemId: string;
-  name: string;
-  customizations: {
-    size: string;
-    milk: string;
-    toppings: string[];
-    notes: string;
-  };
-  totalPrice: number;
-  savedAt: Date;
-}
-
-interface Order {
-  id: string;
-  items: CartItem[];
-  total: number;
-  discount?: number;
-  orderDate: Date;
-  status: 'preparing' | 'ready' | 'served' | 'done';
-  paymentMethod?: string;
-  transactionId?: string;
-  tableNumber?: string;
-  voucherCode?: string;
-  paymentStatus?: 'pending' | 'completed' | 'waiting_cash_confirmation';
-  feedbackGiven?: boolean;
-  cashPaymentCode?: string; // Add cash payment code
-}
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-}
-
-interface Voucher {
-  code: string;
-  discount: number; // Percentage or fixed amount
-  type: 'percentage' | 'fixed';
-  minOrder: number;
-  description: string;
-  isActive: boolean;
-}
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'success' | 'info' | 'warning' | 'error';
-  timestamp: Date;
-  isRead: boolean;
-  actionLabel?: string;
-  actionHandler?: () => void;
-}
-
-type LoadingState = 'loading' | 'success' | 'error' | 'timeout' | 'offline';
-
-const menuItems: MenuItem[] = [
-  {
-    id: "1",
-    name: "Americano",
-    description: "Strong coffee with hot water",
-    basePrice: 25000,
-    variants: {
-      sizes: { Small: -5000, Regular: 0, Large: 5000 },
-      milk: { Regular: 0, 'Oat Milk': 5000, 'Almond Milk': 5000, 'Soy Milk': 3000 }
-    },
-    image: ImgCoffee,
-    category: "Coffee",
-    orderCount: 150,
-    isRecommended: true,
-    comboWith: ["8", "12"] // Affogato, Ristretto
-  },
-  {
-    id: "2",
-    name: "Latte",
-    description: "Espresso with steamed milk and foam",
-    basePrice: 30000,
-    variants: {
-      sizes: { Small: -5000, Regular: 0, Large: 5000 },
-      milk: { Regular: 0, 'Oat Milk': 5000, 'Almond Milk': 5000, 'Soy Milk': 3000 }
-    },
-    image: ImgCoffee,
-    category: "Latte",
-    orderCount: 200,
-    isRecommended: true,
-    comboWith: ["4", "5"] // Mocha, Flat White
-  },
-  {
-    id: "3",
-    name: "Cappuccino",
-    description: "Espresso topped with thick foam and steamed milk",
-    basePrice: 32000,
-    variants: {
-      sizes: { Small: -5000, Regular: 0, Large: 5000 },
-      milk: { Regular: 0, 'Oat Milk': 5000, 'Almond Milk': 5000, 'Soy Milk': 3000 }
-    },
-    image: ImgCoffee,
-    category: "Cappuccino",
-    orderCount: 180,
-    comboWith: ["2", "7"] // Latte, Macchiato
-  },
-  {
-    id: "4",
-    name: "Mocha",
-    description: "Espresso with chocolate and steamed milk",
-    basePrice: 35000,
-    variants: {
-      sizes: { Small: -5000, Regular: 0, Large: 5000 },
-      milk: { Regular: 0, 'Oat Milk': 5000, 'Almond Milk': 5000, 'Soy Milk': 3000 }
-    },
-    image: ImgCoffee,
-    category: "Mocha",
-    orderCount: 120,
-    isNew: true,
-    comboWith: ["2", "8"] // Latte, Affogato
-  },
-  {
-    id: "5",
-    name: "Flat White",
-    description: "A velvety blend of espresso and microfoam",
-    basePrice: 28000,
-    variants: {
-      sizes: { Small: -5000, Regular: 0, Large: 5000 },
-      milk: { Regular: 0, 'Oat Milk': 5000, 'Almond Milk': 5000, 'Soy Milk': 3000 }
-    },
-    image: ImgCoffee,
-    category: "Coffee",
-    orderCount: 90,
-    isNew: true,
-    comboWith: ["2", "3"] // Latte, Cappuccino
-  },
-  {
-    id: "6",
-    name: "Espresso",
-    description: "Concentrated coffee brewed by forcing hot water",
-    basePrice: 20000,
-    variants: {
-      sizes: { Small: -3000, Regular: 0, Large: 3000 }
-    },
-    image: ImgCoffee,
-    category: "Coffee",
-    orderCount: 160,
-    comboWith: ["1", "12"] // Americano, Ristretto
-  },
-  {
-    id: "7",
-    name: "Macchiato",
-    description: "Espresso with a dash of foamed milk",
-    basePrice: 27000,
-    variants: {
-      sizes: { Small: -5000, Regular: 0, Large: 5000 },
-      milk: { Regular: 0, 'Oat Milk': 5000, 'Almond Milk': 5000, 'Soy Milk': 3000 }
-    },
-    image: ImgCoffee,
-    category: "Coffee",
-    orderCount: 100,
-    isNew: true,
-    comboWith: ["3", "6"] // Cappuccino, Espresso
-  },
-  {
-    id: "8",
-    name: "Affogato",
-    description: "Vanilla ice cream topped with a shot of espresso",
-    basePrice: 40000,
-    variants: {
-      sizes: { Small: -5000, Regular: 0, Large: 5000 }
-    },
-    image: ImgCoffee,
-    category: "Coffee",
-    orderCount: 75,
-    comboWith: ["4", "1"] // Mocha, Americano
-  },
-  {
-    id: "9",
-    name: "Irish Coffee",
-    description: "Coffee with whiskey, sugar, and cream",
-    basePrice: 45000,
-    variants: {
-      sizes: { Small: -5000, Regular: 0, Large: 8000 }
-    },
-    image: ImgCoffee,
-    category: "Coffee",
-    orderCount: 45
-  },
-  {
-    id: "10",
-    name: "Cold Brew",
-    description: "Coffee brewed with cold water over 12 hours",
-    basePrice: 30000,
-    variants: {
-      sizes: { Small: -5000, Regular: 0, Large: 5000 }
-    },
-    image: ImgCoffee,
-    category: "Cold Brew",
-    orderCount: 110,
-    isRecommended: true,
-    comboWith: ["11"] // Nitro Coffee
-  },
-  {
-    id: "11",
-    name: "Nitro Coffee",
-    description: "Cold brew infused with nitrogen for creaminess",
-    basePrice: 38000,
-    variants: {
-      sizes: { Small: -5000, Regular: 0, Large: 5000 }
-    },
-    image: ImgCoffee,
-    category: "Cold Brew",
-    orderCount: 85,
-    isNew: true,
-    comboWith: ["10"] // Cold Brew
-  },
-  {
-    id: "12",
-    name: "Ristretto",
-    description: "A short shot of espresso with a rich flavor",
-    basePrice: 22000,
-    variants: {
-      sizes: { Small: -3000, Regular: 0, Large: 3000 }
-    },
-    image: ImgCoffee,
-    category: "Coffee",
-    orderCount: 95,
-    comboWith: ["1", "6"] // Americano, Espresso
-  }
-];
-
-const availableVouchers: Voucher[] = [
-  {
-    code: "FIRST10",
-    discount: 10,
-    type: "percentage",
-    minOrder: 50000,
-    description: "10% off for first-time customers",
-    isActive: true
-  },
-  {
-    code: "SAVE15K",
-    discount: 15000,
-    type: "fixed",
-    minOrder: 100000,
-    description: "Rp 15,000 off for orders above Rp 100,000",
-    isActive: true
-  },
-  {
-    code: "STUDENT",
-    discount: 15,
-    type: "percentage",
-    minOrder: 30000,
-    description: "15% student discount",
-    isActive: true
-  }
-];
-
-const categories = ["All", "New", "Recommended", "Most Ordered", "Coffee", "Latte", "Cappuccino", "Mocha", "Cold Brew"];
+type LoadingState = "loading" | "success" | "error" | "timeout" | "offline";
 
 // Timeout duration for data loading
 const LOADING_TIMEOUT = 10000; // 10 seconds
@@ -335,17 +73,19 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showCart, setShowCart] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
-  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  const [completedOrder, setCompletedOrder] = useState<OrderHistoryItem | null>(null);
   const [showNavDrawer, setShowNavDrawer] = useState(false);
   const [showAddedNotification, setShowAddedNotification] = useState(false);
   const [addedItem, setAddedItem] = useState<CartItem | null>(null);
   const [showComboNotification, setShowComboNotification] = useState(false);
-  const [comboAddedItem, setComboAddedItem] = useState<MenuItem | null>(null);
+  const [comboAddedItem, setComboAddedItem] = useState<ProductProduct | null>(null);
   const [showMenuDetail, setShowMenuDetail] = useState(false);
-  const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
+  const [selectedMenuItem, setSelectedMenuItem] = useState<ProductProduct | null>(
+    null
+  );
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [showOrderDetail, setShowOrderDetail] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -356,14 +96,14 @@ export default function App() {
   const [showTermsConditions, setShowTermsConditions] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [user, setUser] = useState<User | null>(null);
+  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [user, setUser] = useState<UserUser | null>(null);
   const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [feedbackOrder, setFeedbackOrder] = useState<Order | null>(null);
+  const [feedbackOrder, setFeedbackOrder] = useState<OrderHistoryItem | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [loadingState, setLoadingState] = useState<LoadingState>('loading');
+  const [loadingState, setLoadingState] = useState<LoadingState>("loading");
   const [retryCount, setRetryCount] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [criticalDataLoaded, setCriticalDataLoaded] = useState(false);
@@ -532,20 +272,20 @@ export default function App() {
   };
 
   // Check for completed orders that need feedback
-  useEffect(() => {
-    const completedOrders = orders.filter(order => 
-      order.status === 'done' && !order.feedbackGiven
-    );
+  // useEffect(() => {
+  //   const completedOrders = orders.filter(order => 
+  //     order.status === 'completed' && !order.feedbackGiven
+  //   );
     
-    if (completedOrders.length > 0 && !showFeedbackModal) {
-      // Show feedback for the most recent completed order
-      setFeedbackOrder(completedOrders[0]);
-      setShowFeedbackModal(true);
-    }
-  }, [orders, showFeedbackModal]);
+  //   if (completedOrders.length > 0 && !showFeedbackModal) {
+  //     // Show feedback for the most recent completed order
+  //     setFeedbackOrder(completedOrders[0]);
+  //     setShowFeedbackModal(true);
+  //   }
+  // }, [orders, showFeedbackModal]);
 
   // Save favorites to localStorage
-  const saveFavorite = (item: MenuItem, customizations: any, totalPrice: number) => {
+  const saveFavorite = (item: ProductProduct, customizations: any, totalPrice: number) => {
     const favorite: FavoriteItem = {
       id: Date.now().toString(),
       menuItemId: item.id,
@@ -578,7 +318,7 @@ export default function App() {
   // Handle login with notification
   // const handleLogin = (email: string, password: string) => {
   const handleLogin = (email: string) => {
-    const userData: User = {
+    const userData: UserUser = {
       id: Date.now().toString(),
       name: email.split('@')[0],
       email,
@@ -599,7 +339,7 @@ export default function App() {
 
   // Handle register with notification
   const handleRegister = (userData: {name: string; email: string; phone: string; password: string}) => {
-    const newUser: User = {
+    const newUser: UserUser = {
       id: Date.now().toString(),
       name: userData.name,
       email: userData.email,
@@ -638,7 +378,7 @@ export default function App() {
     return `CASH${Date.now().toString().slice(-6)}`;
   };
 
-  const addToCart = (item: MenuItem, quantity: number = 1, customizations?: any) => {
+  const addToCart = (item: ProductProduct, quantity: number = 1, customizations?: any) => {
     let actualPrice = item.basePrice;
     
     // Calculate price with variants
@@ -689,7 +429,7 @@ export default function App() {
   };
 
   // Handle combo item add with notification
-  const handleComboItemAdd = (comboItem: MenuItem) => {
+  const handleComboItemAdd = (comboItem: ProductProduct) => {
     addToCart(comboItem, 1, { size: 'Regular', milk: 'Regular', toppings: [], notes: '' });
     
     // Show combo notification
@@ -732,12 +472,12 @@ export default function App() {
   };
 
   // Handle quick add to cart (default configuration)
-  const handleQuickAddToCart = (item: MenuItem) => {
+  const handleQuickAddToCart = (item: ProductProduct) => {
     addToCart(item, 1, { size: 'Regular', milk: 'Regular', toppings: [], notes: '' });
   };
 
   // Handle quantity change for menu items
-  const handleMenuItemQuantityChange = (item: MenuItem, quantity: number) => {
+  const handleMenuItemQuantityChange = (item: ProductProduct, quantity: number) => {
     const defaultCustomizations = { size: 'Regular', milk: 'Regular', toppings: [], notes: '' };
     
     if (quantity === 0) {
@@ -753,7 +493,7 @@ export default function App() {
     }
   };
 
-  const handleShowMenuDetail = (item: MenuItem) => {
+  const handleShowMenuDetail = (item: ProductProduct) => {
     setSelectedMenuItem(item);
     setShowMenuDetail(true);
   };
@@ -793,7 +533,7 @@ export default function App() {
     const discount = calculateDiscount(subtotal, appliedVoucher);
     const total = subtotal - discount;
 
-    const order: Order = {
+    const order: OrderHistoryItem = {
       id: Date.now().toString(),
       items: [...cart],
       total,
@@ -958,7 +698,7 @@ export default function App() {
     setShowNavDrawer(false);
   };
 
-  const handleShowOrderDetail = (order: Order) => {
+  const handleShowOrderDetail = (order: OrderItem) => {
     setSelectedOrder(order);
     setShowOrderDetail(true);
   };
@@ -1571,7 +1311,7 @@ function FeedbackModal({
   onSubmit, 
   onClose 
 }: { 
-  order: Order; 
+  order: OrderItem; 
   onSubmit: (orderId: string, rating: number, feedback: string) => void;
   onClose: () => void;
 }) {
@@ -1660,7 +1400,7 @@ function FavoritesSection({
   onReorder 
 }: { 
   favorites: FavoriteItem[]; 
-  menuItems: MenuItem[];
+  menuItems: ProductProduct[];
   onReorder: (favorite: FavoriteItem) => void;
 }) {
   return (
@@ -1733,7 +1473,7 @@ function NavigationDrawer({
   onShowPrivacyPolicy,
   onLogout
 }: { 
-  user: User | null;
+  user: UserUser | null;
   onClose: () => void; 
   onShowOrderHistory: () => void;
   onShowSettings: () => void;
@@ -2020,13 +1760,13 @@ function MenuItemComponent({
   onQuantityChange,
   onToggleFavorite
 }: { 
-  item: MenuItem; 
+  item: ProductProduct; 
   quantity: number;
   isFavorited: boolean;
-  onShowDetail: (item: MenuItem) => void;
-  onQuickAdd: (item: MenuItem) => void;
-  onQuantityChange: (item: MenuItem, quantity: number) => void;
-  onToggleFavorite: (item: MenuItem) => void;
+  onShowDetail: (item: ProductProduct) => void;
+  onQuickAdd: (item: ProductProduct) => void;
+  onQuantityChange: (item: ProductProduct, quantity: number) => void;
+  onToggleFavorite: (item: ProductProduct) => void;
 }) {
   return (
     <div 
