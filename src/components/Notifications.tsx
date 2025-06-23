@@ -1,198 +1,135 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, Gift, Coffee, Star, Trash2, Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Bell, Check, AlertTriangle, Info, X, Eye } from 'lucide-react';
 import { Button } from './ui/button';
-import imgLogo from "./../assets/LogoVector.svg";
+import LogoWhite from '../assets/LogoWhite.png';
 
-interface NotificationsProps {
-  onBack: () => void;
-}
-
-interface NotificationItem {
+interface Notification {
   id: string;
-  type: 'promo' | 'order' | 'new_product' | 'general';
   title: string;
   message: string;
+  type: 'success' | 'info' | 'warning' | 'error';
   timestamp: Date;
-  read: boolean;
-  image?: string;
-  actionText?: string;
-  actionUrl?: string;
+  isRead: boolean;
+  actionLabel?: string;
+  actionHandler?: () => void;
 }
 
-const sampleNotifications: NotificationItem[] = [
-  {
-    id: '1',
-    type: 'promo',
-    title: '🎉 Weekend Special - 30% Off!',
-    message: 'Get 30% off on all coffee drinks this weekend. Limited time offer!',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    read: false,
-    actionText: 'Order Now',
-  },
-  {
-    id: '2',
-    type: 'order',
-    title: 'Order Ready for Pickup',
-    message: 'Your order #12345 is ready for pickup at Downtown Cafe.',
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-    read: true,
-    actionText: 'View Order',
-  },
-  {
-    id: '3',
-    type: 'new_product',
-    title: '☕ New Seasonal Flavor!',
-    message: 'Try our new Pumpkin Spice Latte - available for a limited time only.',
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-    read: false,
-    actionText: 'Try Now',
-  },
-  {
-    id: '4',
-    type: 'promo',
-    title: '🎁 Buy 2 Get 1 Free',
-    message: 'Purchase any 2 drinks and get the 3rd one free! Valid until end of month.',
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    read: true,
-    actionText: 'Order Now',
-  },
-  {
-    id: '5',
-    type: 'general',
-    title: 'New Store Opening',
-    message: 'We\'re excited to announce our new location at Central Mall. Grand opening next week!',
-    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-    read: false,
-  },
-  {
-    id: '6',
-    type: 'promo',
-    title: '💳 Student Discount Available',
-    message: 'Show your student ID and get 20% off on all beverages. Every day!',
-    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-    read: true,
-    actionText: 'Learn More',
-  },
-];
+interface Order {
+  id: string;
+  items: any[];
+  total: number;
+  discount?: number;
+  orderDate: Date;
+  status: 'preparing' | 'ready' | 'served' | 'done';
+  paymentMethod?: string;
+  transactionId?: string;
+  tableNumber?: string;
+  voucherCode?: string;
+  paymentStatus?: 'pending' | 'completed' | 'waiting_cash_confirmation';
+  feedbackGiven?: boolean;
+  cashPaymentCode?: string;
+}
 
-export default function Notifications({ onBack }: NotificationsProps) {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'promo'>('all');
+interface NotificationsPageProps {
+  onBack: () => void;
+  notifications: Notification[];
+  onMarkAsRead: (notificationId: string) => void;
+  onShowOrderDetail: (order: Order) => void;
+  orders: Order[];
+}
 
-  // Load notifications from localStorage on mount
-  useEffect(() => {
-    const savedNotifications = localStorage.getItem('coffee-notifications');
-    if (savedNotifications) {
-      const parsed = JSON.parse(savedNotifications);
-      // Convert timestamp strings back to Date objects
-      const withDates = parsed.map((notif: any) => ({
-        ...notif,
-        timestamp: new Date(notif.timestamp)
-      }));
-      setNotifications(withDates);
-    } else {
-      // First time - use sample notifications
-      setNotifications(sampleNotifications);
-      localStorage.setItem('coffee-notifications', JSON.stringify(sampleNotifications));
+export default function NotificationsPage({ 
+  onBack, 
+  notifications, 
+  onMarkAsRead, 
+  onShowOrderDetail, 
+  orders 
+}: NotificationsPageProps) {
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
+
+  const filteredNotifications = notifications.filter(notification => {
+    if (filter === 'unread') {
+      return !notification.isRead;
     }
-  }, []);
+    return true;
+  });
 
-  // Save notifications to localStorage whenever notifications change
-  const saveNotifications = (newNotifications: NotificationItem[]) => {
-    setNotifications(newNotifications);
-    localStorage.setItem('coffee-notifications', JSON.stringify(newNotifications));
-  };
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const markAsRead = (id: string) => {
-    const updated = notifications.map(notif =>
-      notif.id === id ? { ...notif, read: true } : notif
-    );
-    saveNotifications(updated);
-  };
-
-  const markAsUnread = (id: string) => {
-    const updated = notifications.map(notif =>
-      notif.id === id ? { ...notif, read: false } : notif
-    );
-    saveNotifications(updated);
-  };
-
-  const deleteNotification = (id: string) => {
-    const updated = notifications.filter(notif => notif.id !== id);
-    saveNotifications(updated);
-  };
-
-  const markAllAsRead = () => {
-    const updated = notifications.map(notif => ({ ...notif, read: true }));
-    saveNotifications(updated);
-  };
-
-  const clearAllNotifications = () => {
-    const confirmClear = window.confirm('Are you sure you want to clear all notifications? This action cannot be undone.');
-    if (confirmClear) {
-      saveNotifications([]);
-    }
-  };
-
-  const getFilteredNotifications = () => {
-    switch (filter) {
-      case 'unread':
-        return notifications.filter(n => !n.read);
-      case 'promo':
-        return notifications.filter(n => n.type === 'promo');
-      default:
-        return notifications;
-    }
-  };
-
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
-      case 'promo':
-        return <Gift className="w-5 h-5 text-green-600" />;
-      case 'order':
-        return <Coffee className="w-5 h-5 text-blue-600" />;
-      case 'new_product':
-        return <Star className="w-5 h-5 text-purple-600" />;
-      default:
-        return <Bell className="w-5 h-5 text-gray-600" />;
+      case 'success':
+        return <Check className="w-5 h-5 text-green-600" />;
+      case 'info':
+        return <Info className="w-5 h-5 text-blue-600" />;
+      case 'warning':
+        return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
+      case 'error':
+        return <X className="w-5 h-5 text-red-600" />;
     }
   };
 
-  const getNotificationBgColor = (type: string, read: boolean) => {
-    const baseColor = read ? 'bg-gray-50' : 'bg-white';
+  const getNotificationBgColor = (type: Notification['type']) => {
     switch (type) {
-      case 'promo':
-        return read ? 'bg-green-50' : 'bg-green-100';
-      case 'order':
-        return read ? 'bg-blue-50' : 'bg-blue-100';
-      case 'new_product':
-        return read ? 'bg-purple-50' : 'bg-purple-100';
-      default:
-        return baseColor;
+      case 'success':
+        return 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700';
+      case 'info':
+        return 'bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-700';
+      case 'warning':
+        return 'bg-yellow-50 dark:bg-yellow-900 border-yellow-200 dark:border-yellow-700';
+      case 'error':
+        return 'bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-700';
     }
   };
 
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diff = now.getTime() - new Date(timestamp).getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
 
-    if (diffMinutes < 60) {
-      return `${diffMinutes}m ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h ago`;
+    if (minutes < 60) {
+      return `${minutes}m ago`;
+    } else if (hours < 24) {
+      return `${hours}h ago`;
     } else {
-      return `${diffDays}d ago`;
+      return `${days}d ago`;
     }
   };
 
-  const filteredNotifications = getFilteredNotifications();
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const handleNotificationAction = (notification: Notification) => {
+    // Mark as read when clicked
+    if (!notification.isRead) {
+      onMarkAsRead(notification.id);
+    }
+
+    // Handle custom action if available
+    if (notification.actionHandler) {
+      notification.actionHandler();
+    } else if (notification.actionLabel && notification.actionLabel.includes('Order')) {
+      // Try to find and show order detail if it's order-related
+      const orderMatch = notification.message.match(/#(\d+)/);
+      if (orderMatch) {
+        const orderId = orderMatch[1];
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          onShowOrderDetail(order);
+        }
+      }
+    }
+  };
+
+  const markAllAsRead = () => {
+    notifications.forEach(notification => {
+      if (!notification.isRead) {
+        onMarkAsRead(notification.id);
+      }
+    });
+  };
 
   return (
-    <div className="relative size-full bg-white">
+    <div className="relative size-full bg-white dark:bg-gray-900">
       {/* Header */}
       <div className="bg-[#167dda] h-16 overflow-clip relative shrink-0 w-full">
         <div className="flex flex-row items-center relative size-full px-4">
@@ -206,158 +143,137 @@ export default function Notifications({ onBack }: NotificationsProps) {
           </Button>
           
           <div className="flex-1 flex justify-center">
-            <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-bold text-white">Notifications</h1>
-              {unreadCount > 0 && (
-                <span className="bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </div>
+            <h1 className="text-xl font-bold text-white">Notifications</h1>
           </div>
           
-          <div className="w-10"></div> {/* Spacer for centering */}
+          <div className="w-10"></div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Filter Tabs */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-5 py-3">
-          <div className="flex space-x-1">
-            {[
-              { key: 'all', label: 'All', count: notifications.length },
-              { key: 'unread', label: 'Unread', count: unreadCount },
-              { key: 'promo', label: 'Promos', count: notifications.filter(n => n.type === 'promo').length },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setFilter(tab.key as any)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === tab.key
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                {tab.label} ({tab.count})
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        {notifications.length > 0 && (
-          <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
-            <div className="flex space-x-3">
+      <div className="flex-1 overflow-hidden">
+        {/* Filter and Stats */}
+        <div className="p-5 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {notifications.length} Notifications
+                </span>
+                {unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    {unreadCount} new
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            {unreadCount > 0 && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={markAllAsRead}
-                disabled={unreadCount === 0}
-                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                className="text-sm"
               >
-                Mark All Read
+                <Eye className="w-4 h-4 mr-2" />
+                Mark all read
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearAllNotifications}
-                className="text-red-600 border-red-200 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Clear All
-              </Button>
-            </div>
+            )}
           </div>
-        )}
+
+          {/* Filter Tabs */}
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                filter === 'all'
+                  ? 'bg-[#84482b] text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              All ({notifications.length})
+            </button>
+            <button
+              onClick={() => setFilter('unread')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                filter === 'unread'
+                  ? 'bg-[#84482b] text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              Unread ({unreadCount})
+            </button>
+          </div>
+        </div>
 
         {/* Notifications List */}
-        <div className="p-5">
+        <div className="flex-1 overflow-y-auto">
           {filteredNotifications.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Bell className="w-8 h-8 text-gray-400" />
+            <div className="flex flex-col items-center justify-center h-full text-center px-6">
+              <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+                <Bell className="w-12 h-12 text-gray-400 dark:text-gray-600" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {filter === 'all' ? 'No notifications yet' : 
-                 filter === 'unread' ? 'No unread notifications' : 
-                 'No promotional notifications'}
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                {filter === 'unread' ? 'No Unread Notifications' : 'No Notifications'}
               </h3>
-              <p className="text-gray-500">
-                {filter === 'all' ? 'You\'ll see notifications here when they arrive.' : 
-                 filter === 'unread' ? 'All your notifications have been read.' : 
-                 'No promotional offers at the moment.'}
+              <p className="text-gray-500 dark:text-gray-400 max-w-sm">
+                {filter === 'unread' 
+                  ? 'All notifications have been read.' 
+                  : 'You will receive notifications about your orders, promotions, and account updates here.'
+                }
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="p-4 space-y-3">
               {filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`${getNotificationBgColor(notification.type, notification.read)} rounded-2xl border ${
-                    notification.read ? 'border-gray-200' : 'border-gray-300'
-                  } p-4 transition-all hover:shadow-md`}
+                  className={`border rounded-2xl p-4 transition-all cursor-pointer hover:shadow-md ${
+                    getNotificationBgColor(notification.type)
+                  } ${
+                    !notification.isRead 
+                      ? 'border-l-4 border-l-blue-500' 
+                      : ''
+                  }`}
+                  onClick={() => handleNotificationAction(notification)}
                 >
                   <div className="flex items-start space-x-3">
-                    {/* Icon */}
-                    <div className="shrink-0 mt-1">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center">
                       {getNotificationIcon(notification.type)}
                     </div>
-
-                    {/* Content */}
+                    
                     <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className={`font-semibold ${notification.read ? 'text-gray-700' : 'text-gray-900'}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                           {notification.title}
-                        </h3>
+                        </h4>
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             {formatTimestamp(notification.timestamp)}
                           </span>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          {!notification.isRead && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full" />
                           )}
                         </div>
                       </div>
-
-                      <p className={`text-sm mb-3 ${notification.read ? 'text-gray-600' : 'text-gray-700'}`}>
+                      
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
                         {notification.message}
                       </p>
-
-                      {/* Actions */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          {notification.actionText && (
-                            <Button
-                              size="sm"
-                              className="bg-[#84482b] hover:bg-[#6d3a23] text-white text-xs px-3 py-1"
-                              onClick={() => {
-                                markAsRead(notification.id);
-                                alert(`${notification.actionText} clicked!`);
-                              }}
-                            >
-                              {notification.actionText}
-                            </Button>
-                          )}
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => notification.read ? markAsUnread(notification.id) : markAsRead(notification.id)}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
-                            title={notification.read ? 'Mark as unread' : 'Mark as read'}
-                          >
-                            {notification.read ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                          <button
-                            onClick={() => deleteNotification(notification.id)}
-                            className="text-gray-400 hover:text-red-600 transition-colors"
-                            title="Delete notification"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
+                      
+                      {notification.actionLabel && (
+                        <Button
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNotificationAction(notification);
+                          }}
+                          className="bg-[#84482b] hover:bg-[#6d3a23] text-white text-xs px-3 py-1 h-auto"
+                        >
+                          {notification.actionLabel}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -370,12 +286,12 @@ export default function Notifications({ onBack }: NotificationsProps) {
       {/* Powered By Footer */}
       <div className="bg-[#000000] p-4">
         <div className="flex flex-row items-center justify-center gap-[5px]">
-          <div className="font-['Poppins:Medium',sans-serif] font-medium leading-[0] not-italic text-[#ffffff] text-[12px] text-right tracking-[-0.06px]">
+          <div className="font-['Poppins:Medium',_sans-serif] font-medium leading-[0] not-italic text-[#ffffff] text-[12px] text-right tracking-[-0.06px]">
             <p className="block leading-[1.35]">Powered By </p>
           </div>
           <div
-            className="aspect-960/320 bg-center bg-cover bg-no-repeat h-4 shrink-0"
-            style={{ backgroundImage: `url('${imgLogo}')` }}
+            className="aspect-[960/320] bg-center bg-cover bg-no-repeat h-4 shrink-0"
+            style={{ backgroundImage: `url('${LogoWhite}')` }}
           />
         </div>
       </div>

@@ -1,6 +1,6 @@
-import { ArrowLeft, Clock, CheckCircle, Coffee, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, Coffee, RotateCcw, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
-import imgLogo from "./../assets/LogoVector.svg"
+import LogoWhite from '../assets/LogoWhite.png';
 
 interface CartItem {
   id: string;
@@ -29,12 +29,11 @@ interface Order {
 interface OrderHistoryProps {
   orders: Order[];
   onBack: () => void;
-  // onOrderClick: (order: Order) => void;
+  onOrderClick: (order: Order) => void;
   onReorder: (orderItems: CartItem[]) => void;
 }
 
-// export default function OrderHistory({ orders, onBack, onOrderClick, onReorder }: OrderHistoryProps) {
-export default function OrderHistory({ orders, onBack, onReorder }: OrderHistoryProps) {
+export default function OrderHistory({ orders, onBack, onOrderClick, onReorder }: OrderHistoryProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'preparing':
@@ -136,21 +135,28 @@ export default function OrderHistory({ orders, onBack, onReorder }: OrderHistory
             {orders.map((order) => (
               <div 
                 key={order.id} 
-                // onClick={() => onOrderClick(order)}
-                className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-              
+                className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => onOrderClick(order)}
+              >
                 {/* Order Header */}
                 <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="font-semibold text-gray-900">Order #{order.id.slice(-6)}</h3>
-                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status)}`}>
-                        {getStatusIcon(order.status)}
-                        <span className="ml-1">{getStatusText(order.status)}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-3">
+                        <h3 className="font-semibold text-gray-900">Order #{order.id.slice(-6)}</h3>
+                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status)}`}>
+                          {getStatusIcon(order.status)}
+                          <span className="ml-1">{getStatusText(order.status)}</span>
+                        </div>
                       </div>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
                     </div>
                     <p className="text-sm text-gray-500">{formatDate(order.orderDate)}</p>
                   </div>
+                </div>
+
+                {/* Order Summary */}
+                <div className="flex justify-between items-center mb-4">
                   <div className="text-right">
                     <div className="text-lg font-bold text-gray-900">
                       Rp {order.total.toLocaleString()}
@@ -161,11 +167,11 @@ export default function OrderHistory({ orders, onBack, onReorder }: OrderHistory
                   </div>
                 </div>
 
-                {/* Order Items */}
+                {/* Order Items Preview */}
                 <div className="space-y-3 mb-4">
                   {order.items.slice(0, 2).map((item, index) => (
                     <div key={`${item.id}-${index}`} className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                         <div
                           className="w-full h-full bg-cover bg-center"
                           style={{ backgroundImage: `url('${item.image}')` }}
@@ -200,7 +206,10 @@ export default function OrderHistory({ orders, onBack, onReorder }: OrderHistory
                 <div className="flex space-x-3">
                   <Button
                     variant="outline"
-                    onClick={() => onReorder(order.items)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering order click
+                      onReorder(order.items);
+                    }}
                     className="flex-1 border-[#84482b] text-[#84482b] hover:bg-[#84482b] hover:text-white rounded-xl"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
@@ -211,7 +220,10 @@ export default function OrderHistory({ orders, onBack, onReorder }: OrderHistory
                     <Button
                       variant="outline"
                       className="flex-1 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-xl"
-                      onClick={() => alert('Tracking feature coming soon!')}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering order click
+                        alert('Tracking feature coming soon!');
+                      }}
                     >
                       <Clock className="w-4 h-4 mr-2" />
                       Track Order
@@ -221,7 +233,10 @@ export default function OrderHistory({ orders, onBack, onReorder }: OrderHistory
                   {order.status === 'ready' && (
                     <Button
                       className="flex-1 bg-blue-600 text-white hover:bg-blue-700 rounded-xl"
-                      onClick={() => alert('Ready for pickup!')}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering order click
+                        alert('Ready for pickup!');
+                      }}
                     >
                       <Coffee className="w-4 h-4 mr-2" />
                       Ready!
@@ -237,12 +252,12 @@ export default function OrderHistory({ orders, onBack, onReorder }: OrderHistory
       {/* Powered By Footer */}
       <div className="bg-[#000000] p-4">
         <div className="flex flex-row items-center justify-center gap-[5px]">
-          <div className="font-['Poppins:Medium',sans-serif] font-medium leading-[0] not-italic text-[#ffffff] text-[12px] text-right tracking-[-0.06px]">
+          <div className="font-['Poppins:Medium',_sans-serif] font-medium leading-[0] not-italic text-[#ffffff] text-[12px] text-right tracking-[-0.06px]">
             <p className="block leading-[1.35]">Powered By </p>
           </div>
           <div
-            className="aspect-960/320 bg-center bg-cover bg-no-repeat h-4 shrink-0"
-            style={{ backgroundImage: `url('${imgLogo}')` }}
+            className="aspect-[960/320] bg-center bg-cover bg-no-repeat h-4 shrink-0"
+            style={{ backgroundImage: `url('${LogoWhite}')` }}
           />
         </div>
       </div>
