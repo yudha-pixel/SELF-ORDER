@@ -20,14 +20,9 @@ import {
   Star,
   Clock,
   TrendingUp,
-  RefreshCw,
-  Wifi,
   WifiOff,
-  AlertTriangle,
 } from "lucide-react";
 import { Button } from "./components/ui/button";
-import { Skeleton } from "./components/ui/skeleton";
-import { Alert, AlertDescription } from "./components/ui/alert";
 import Cart from "./components/Cart";
 import PaymentSuccess from "./components/PaymentSuccess";
 import MenuDetailOverlay from "./components/MenuDetailOverlay";
@@ -44,6 +39,11 @@ import DeveloperFeedback from "./components/DeveloperFeedback";
 import TermsConditions from "./components/TermsConditions";
 import PrivacyPolicy from "./components/PrivacyPolicy";
 import LazyImage from "./components/LazyImage";
+
+// Component Import
+import LoadingSkeleton from "./components/LoadingSkeleton";
+import FeedbackModal from "./components/FeedbackModal.tsx";
+import ErrorState from "./components/ErrorState.tsx";
 
 // Data Imports
 import { menuItems } from "./data/menuItems";
@@ -1138,257 +1138,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-      {/* Home Indicator */}
-      <HomeIndicator />
-    </div>
-  );
-}
-
-// Error State Component
-function ErrorState({ 
-  state, 
-  onRetry, 
-  retryCount, 
-  isOnline 
-}: { 
-  state: LoadingState; 
-  onRetry: () => void;
-  retryCount: number;
-  isOnline: boolean;
-}) {
-  const getErrorContent = () => {
-    switch (state) {
-      case 'timeout':
-        return {
-          icon: <Clock className="w-12 h-12 text-yellow-500" />,
-          title: 'Loading Taking Too Long',
-          message: 'The app is taking longer than expected to load. This might be due to a slow connection.',
-          variant: 'warning' as const
-        };
-      case 'offline':
-        return {
-          icon: <WifiOff className="w-12 h-12 text-red-500" />,
-          title: 'You\'re Offline',
-          message: isOnline ? 'Connection restored! You can retry now.' : 'Please check your internet connection and try again.',
-          variant: isOnline ? 'success' as const : 'destructive' as const
-        };
-      case 'error':
-      default:
-        return {
-          icon: <AlertTriangle className="w-12 h-12 text-red-500" />,
-          title: 'Something Went Wrong',
-          message: 'We encountered an error while loading the app. Please try again.',
-          variant: 'destructive' as const
-        };
-    }
-  };
-
-  // const { icon, title, message, variant } = getErrorContent();
-  const { icon, title, message } = getErrorContent();
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-6">
-      <div className="mb-6">
-        {icon}
-      </div>
-      
-      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-        {title}
-      </h3>
-      
-      <Alert className="mb-6 max-w-md">
-        <AlertDescription>
-          {message}
-          {retryCount > 0 && (
-            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Retry attempts: {retryCount}
-            </div>
-          )}
-        </AlertDescription>
-      </Alert>
-
-      <div className="space-y-3">
-        <Button
-          onClick={onRetry}
-          disabled={state === 'offline' && !isOnline}
-          className="bg-[#84482b] hover:bg-[#6d3a23] text-white px-6 py-2 rounded-xl flex items-center space-x-2"
-        >
-          <RefreshCw className="w-4 h-4" />
-          <span>{state === 'offline' && !isOnline ? 'Waiting for Connection' : 'Try Again'}</span>
-        </Button>
-        
-        {state === 'offline' && (
-          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-            {isOnline ? (
-              <>
-                <Wifi className="w-4 h-4 text-green-500" />
-                <span>Connection restored!</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="w-4 h-4" />
-                <span>No internet connection</span>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Loading Skeleton Component
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-6 animate-pulse">
-      {/* Search Section Skeleton */}
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full rounded-2xl" />
-        <div className="flex space-x-3 overflow-hidden">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-10 w-24 rounded-full flex-shrink-0" />
-          ))}
-        </div>
-      </div>
-
-      {/* Favorites Section Skeleton */}
-      <div className="space-y-3">
-        <Skeleton className="h-6 w-32" />
-        <div className="flex space-x-3 overflow-hidden">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-16 w-48 rounded-xl flex-shrink-0" />
-          ))}
-        </div>
-      </div>
-
-      {/* Menu Items Skeleton */}
-      <div className="space-y-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <MenuItemSkeleton key={i} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Menu Item Skeleton Component
-function MenuItemSkeleton() {
-  return (
-    <div className="w-full bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-      <div className="p-4">
-        <div className="flex space-x-4">
-          {/* Image Skeleton */}
-          <Skeleton className="w-20 h-20 rounded-xl flex-shrink-0" />
-          
-          {/* Content Skeleton */}
-          <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-4 w-48" />
-              </div>
-              <Skeleton className="w-6 h-6 rounded-full ml-2" />
-            </div>
-            
-            <div className="flex justify-between items-center mt-3">
-              <div className="space-y-2">
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-3 w-16" />
-              </div>
-              <Skeleton className="h-10 w-20 rounded-xl" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Feedback Modal Component
-function FeedbackModal({ 
-  order, 
-  onSubmit, 
-  onClose 
-}: { 
-  order: OrderItem; 
-  onSubmit: (orderId: string, rating: number, feedback: string) => void;
-  onClose: () => void;
-}) {
-  const [rating, setRating] = useState(0);
-  const [feedback, setFeedback] = useState('');
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      
-      <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Order Complete!</h3>
-          <p className="text-gray-600 dark:text-gray-400">How was your experience?</p>
-        </div>
-
-        {/* Rating */}
-        <div className="mb-6">
-          <div className="flex justify-center space-x-2 mb-3">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                onClick={() => setRating(star)}
-                className="focus:outline-none"
-              >
-                <Star 
-                  className={`w-10 h-10 transition-colors ${
-                    star <= rating 
-                      ? 'text-yellow-400 fill-current' 
-                      : 'text-gray-300 dark:text-gray-600'
-                  }`}
-                />
-              </button>
-            ))}
-          </div>
-          <p className="text-center text-gray-600 dark:text-gray-400">
-            {rating === 0 && 'Rate your experience'}
-            {rating === 1 && 'Poor'}
-            {rating === 2 && 'Fair'}
-            {rating === 3 && 'Good'}
-            {rating === 4 && 'Very Good'}
-            {rating === 5 && 'Excellent'}
-          </p>
-        </div>
-
-        {/* Feedback */}
-        <div className="mb-6">
-          <textarea
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Tell us about your experience (optional)"
-            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#84482b] focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            rows={3}
-          />
-        </div>
-
-        {/* Buttons */}
-        <div className="flex space-x-3">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1"
-          >
-            Skip
-          </Button>
-          <Button
-            onClick={() => onSubmit(order.id, rating, feedback)}
-            disabled={rating === 0}
-            className="flex-1 bg-[#84482b] hover:bg-[#6d3a23] disabled:bg-gray-300"
-          >
-            Submit
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -1870,14 +1619,6 @@ function MenuItemComponent({
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function HomeIndicator() {
-  return (
-    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-      <div className="w-32 h-1 bg-black bg-opacity-30 dark:bg-white dark:bg-opacity-30 rounded-full" />
     </div>
   );
 }
