@@ -105,3 +105,10 @@ export interface Notification {
   actionLabel?: string;
   actionHandler?: () => void;
 }
+
+export interface Customizations {
+    size: string;
+    milk: string;
+    toppings: string[];
+    notes: string;
+}

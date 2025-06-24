@@ -1,6 +1,7 @@
 import { ArrowLeft, Clock, CheckCircle, Coffee, RotateCcw, ChevronRight, Utensils } from 'lucide-react';
 import { Button } from './ui/button';
 import LogoWhite from '../assets/LogoWhite.png';
+import {Customizations} from "@/types";
 
 // FIX: Updated CartItem interface to match App.tsx
 interface CartItem {
@@ -11,12 +12,7 @@ interface CartItem {
   image: string;
   category: string;
   quantity: number;
-  customizations?: {
-    size: string;
-    milk: string;
-    toppings?: string[]; // Made toppings optional to match other definitions
-    notes: string;
-  };
+  customizations?: Customizations;
 }
 
 // FIX: Updated Order interface to match App.tsx

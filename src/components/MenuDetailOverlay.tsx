@@ -1,57 +1,27 @@
 import { useState } from 'react';
 import { X, Heart, Plus, Minus, Star } from 'lucide-react';
 import { Button } from './ui/button';
-
-interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  basePrice: number;
-  variants?: {
-    sizes?: {
-      Small: number;
-      Regular: number;
-      Large: number;
-    };
-    milk?: {
-      Regular: number;
-      'Oat Milk': number;
-      'Almond Milk': number;
-      'Soy Milk': number;
-    };
-  };
-  image: string;
-  category: string;
-  isNew?: boolean;
-  isRecommended?: boolean;
-  orderCount?: number;
-  comboWith?: string[];
-}
+import { Customizations, ProductProduct } from "@/types";
 
 interface FavoriteItem {
   id: string;
   menuItemId: string;
   name: string;
-  customizations: {
-    size: string;
-    milk: string;
-    toppings: string[];
-    notes: string;
-  };
+  customizations: Customizations
   totalPrice: number;
   savedAt: Date;
 }
 
 interface MenuDetailOverlayProps {
-  item: MenuItem;
-  menuItems: MenuItem[];
+  item: ProductProduct;
+  menuItems: ProductProduct[];
   favorites: FavoriteItem[];
   onClose: () => void;
-  onAddToCart: (item: MenuItem, quantity: number, customizations: any) => void;
-  onSaveFavorite: (item: MenuItem, customizations: any, totalPrice: number) => void;
+  onAddToCart: (item: ProductProduct, quantity: number, customizations: Customizations) => void;
+  onSaveFavorite: (item: ProductProduct, customizations: Customizations, totalPrice: number) => void;
   onRemoveFavorite: (favoriteId: string) => void;
-  isItemFavorited: (itemId: string, customizations?: any) => boolean;
-  onComboItemAdd: (comboItem: MenuItem) => void; // Add this prop
+  getFavoriteItem: (itemId: string, customizations?: Customizations) => FavoriteItem | null;
+  onComboItemAdd: (comboItem: ProductProduct) => void; // Add this prop
 }
 
 export default function MenuDetailOverlay({
@@ -62,7 +32,6 @@ export default function MenuDetailOverlay({
   onAddToCart,
   onSaveFavorite,
   onRemoveFavorite,
-  isItemFavorited,
   onComboItemAdd
 }: MenuDetailOverlayProps) {
   const [selectedSize, setSelectedSize] = useState('Regular');
@@ -93,8 +62,18 @@ export default function MenuDetailOverlay({
     return price * quantity;
   };
 
-  const totalPrice = calculateTotalPrice();
-  const isFavorited = isItemFavorited(item.id, customizations);
+  const getFavoriteItem = (itemId: string, customizations?: Customizations): FavoriteItem | null => {
+    if (!customizations) return null;
+    const customString = JSON.stringify(customizations);
+    return favorites.find(fav =>
+      fav.menuItemId === itemId &&
+      JSON.stringify(fav.customizations) === customString
+    ) || null;
+  };
+
+  const isItemFavorited = (itemId: string, customizations?: Customizations) => {
+    return !!getFavoriteItem(itemId, customizations);
+  };
 
   const handleAddToCart = () => {
     onAddToCart(item, quantity, customizations);
@@ -124,6 +103,9 @@ export default function MenuDetailOverlay({
     if (price > 0) return `+Rp ${price.toLocaleString()}`;
     return `Rp ${Math.abs(price).toLocaleString()} off`;
   };
+
+  const totalPrice = calculateTotalPrice();
+  const isFavorited = isItemFavorited(item.id, customizations);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end">

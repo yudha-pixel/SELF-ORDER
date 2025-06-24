@@ -44,6 +44,7 @@ import {
   UserUser,
   Voucher,
   Notification,
+  Customizations
 } from "./types";
 
 type LoadingState = "loading" | "success" | "error" | "timeout" | "offline";
@@ -64,9 +65,7 @@ export default function App() {
   const [showComboNotification, setShowComboNotification] = useState(false);
   const [comboAddedItem, setComboAddedItem] = useState<ProductProduct | null>(null);
   const [showMenuDetail, setShowMenuDetail] = useState(false);
-  const [selectedMenuItem, setSelectedMenuItem] = useState<ProductProduct | null>(
-    null
-  );
+  const [selectedMenuItem, setSelectedMenuItem] = useState<ProductProduct | null>(null);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [showOrderDetail, setShowOrderDetail] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
@@ -131,7 +130,7 @@ export default function App() {
   const loadData = useCallback(async (attempt: number = 1): Promise<void> => {
     try {
       setLoadingState('loading');
-      
+
       // Check if we're offline
       if (!navigator.onLine) {
         setLoadingState('offline');
@@ -162,15 +161,15 @@ export default function App() {
           const savedUser = localStorage.getItem('coffee-user');
           const savedNotifications = localStorage.getItem('coffee-notifications');
           const savedDarkMode = localStorage.getItem('coffee-dark-mode');
-          
+
           if (savedFavorites) {
             setFavorites(JSON.parse(savedFavorites));
           }
-          
+
           if (savedOrders) {
             setOrders(JSON.parse(savedOrders));
           }
-          
+
           if (savedUser) {
             setUser(JSON.parse(savedUser));
           }
@@ -184,7 +183,7 @@ export default function App() {
             setIsDarkMode(darkMode);
             document.documentElement.classList.toggle('dark', darkMode);
           }
-          
+
           resolve();
         }, attempt === 1 ? 1000 : 2000); // Faster retry for subsequent attempts
       });
@@ -192,10 +191,10 @@ export default function App() {
       await Promise.race([dataLoadingPromise, timeoutPromise]);
       setLoadingState('success');
       setRetryCount(0);
-      
+
     } catch (error) {
       console.error('Loading error:', error);
-      
+
       if (error instanceof Error && error.message === 'timeout') {
         setLoadingState('timeout');
       } else if (!navigator.onLine) {
@@ -257,10 +256,10 @@ export default function App() {
 
   // Check for completed orders that need feedback
   // useEffect(() => {
-  //   const completedOrders = orders.filter(order => 
+  //   const completedOrders = orders.filter(order =>
   //     order.status === 'completed' && !order.feedbackGiven
   //   );
-    
+
   //   if (completedOrders.length > 0 && !showFeedbackModal) {
   //     // Show feedback for the most recent completed order
   //     setFeedbackOrder(completedOrders[0]);
@@ -269,7 +268,7 @@ export default function App() {
   // }, [orders, showFeedbackModal]);
 
   // Save favorites to localStorage
-  const saveFavorite = (item: ProductProduct, customizations: any, totalPrice: number) => {
+  const saveFavorite = (item: ProductProduct, customizations: Customizations, totalPrice: number) => {
     const favorite: FavoriteItem = {
       id: Date.now().toString(),
       menuItemId: item.id,
@@ -291,13 +290,19 @@ export default function App() {
     localStorage.setItem('coffee-favorites', JSON.stringify(updatedFavorites));
   };
 
-  // Check if item is favorited
-  const isItemFavorited = (itemId: string, customizations?: any) => {
-    return favorites.some(fav => 
-      fav.menuItemId === itemId && 
-      JSON.stringify(fav.customizations) === JSON.stringify(customizations)
-    );
+  const getFavoriteItem = (itemId: string, customizations?: Customizations): FavoriteItem | null => {
+    if (!customizations) return null;
+    const customString = JSON.stringify(customizations);
+    return favorites.find(fav =>
+      fav.menuItemId === itemId &&
+      JSON.stringify(fav.customizations) === customString
+    ) || null;
   };
+
+  const isItemFavorited = (itemId: string, customizations?: Customizations) => {
+    return !!getFavoriteItem(itemId, customizations);
+  };
+
 
   // Handle login with notification
   // const handleLogin = (email: string, password: string) => {
@@ -308,7 +313,7 @@ export default function App() {
       email,
       phone: '+1234567890'
     };
-    
+
     setUser(userData);
     localStorage.setItem('coffee-user', JSON.stringify(userData));
     setShowLogin(false);
@@ -329,7 +334,7 @@ export default function App() {
       email: userData.email,
       phone: userData.phone
     };
-    
+
     setUser(newUser);
     localStorage.setItem('coffee-user', JSON.stringify(newUser));
     setShowRegister(false);
@@ -362,9 +367,9 @@ export default function App() {
     return `CASH${Date.now().toString().slice(-6)}`;
   };
 
-  const addToCart = (item: ProductProduct, quantity: number = 1, customizations?: any) => {
+  const addToCart = (item: ProductProduct, quantity: number = 1, customizations?: Customizations) => {
     let actualPrice = item.basePrice;
-    
+
     // Calculate price with variants
     if (customizations) {
       if (customizations.size && item.variants?.sizes) {
@@ -387,11 +392,11 @@ export default function App() {
     };
 
     setCart(prevCart => {
-      const existingItemIndex = prevCart.findIndex(cartItem => 
-        cartItem.id === item.id && 
+      const existingItemIndex = prevCart.findIndex(cartItem =>
+        cartItem.id === item.id &&
         JSON.stringify(cartItem.customizations) === JSON.stringify(customizations)
       );
-      
+
       if (existingItemIndex >= 0) {
         return prevCart.map((cartItem, index) =>
           index === existingItemIndex
@@ -415,7 +420,7 @@ export default function App() {
   // Handle combo item add with notification
   const handleComboItemAdd = (comboItem: ProductProduct) => {
     addToCart(comboItem, 1, { size: 'Regular', milk: 'Regular', toppings: [], notes: '' });
-    
+
     // Show combo notification
     setComboAddedItem(comboItem);
     setShowComboNotification(true);
@@ -425,13 +430,13 @@ export default function App() {
     }, 2000);
   };
 
-  const removeFromCart = (itemId: string, customizations?: any) => {
-    setCart(prevCart => prevCart.filter(item => 
+  const removeFromCart = (itemId: string, customizations?: Customizations) => {
+    setCart(prevCart => prevCart.filter(item =>
       !(item.id === itemId && JSON.stringify(item.customizations) === JSON.stringify(customizations))
     ));
   };
 
-  const updateCartItemQuantity = (itemId: string, quantity: number, customizations?: any) => {
+  const updateCartItemQuantity = (itemId: string, quantity: number, customizations?: Customizations) => {
     if (quantity === 0) {
       removeFromCart(itemId, customizations);
       return;
@@ -439,7 +444,7 @@ export default function App() {
     setCart(prevCart =>
       prevCart.map(item =>
         item.id === itemId && JSON.stringify(item.customizations) === JSON.stringify(customizations)
-          ? { ...item, quantity } 
+          ? { ...item, quantity }
           : item
       )
     );
@@ -447,8 +452,8 @@ export default function App() {
 
   // Get item quantity in cart (for default configuration)
   const getItemQuantityInCart = (itemId: string) => {
-    const cartItem = cart.find(item => 
-      item.id === itemId && 
+    const cartItem = cart.find(item =>
+      item.id === itemId &&
       (JSON.stringify(item.customizations) === JSON.stringify({ size: 'Regular', milk: 'Regular', toppings: [], notes: '' }) ||
        !item.customizations)
     );
@@ -463,7 +468,7 @@ export default function App() {
   // Handle quantity change for menu items
   const handleMenuItemQuantityChange = (item: ProductProduct, quantity: number) => {
     const defaultCustomizations = { size: 'Regular', milk: 'Regular', toppings: [], notes: '' };
-    
+
     if (quantity === 0) {
       removeFromCart(item.id, defaultCustomizations);
     } else {
@@ -484,12 +489,12 @@ export default function App() {
 
   // Apply voucher
   const applyVoucher = (voucherCode: string, cartTotal: number) => {
-    const voucher = availableVouchers.find(v => 
-      v.code.toLowerCase() === voucherCode.toLowerCase() && 
-      v.isActive && 
+    const voucher = availableVouchers.find(v =>
+      v.code.toLowerCase() === voucherCode.toLowerCase() &&
+      v.isActive &&
       cartTotal >= v.minOrder
     );
-    
+
     if (voucher) {
       setAppliedVoucher(voucher);
       return true;
@@ -500,7 +505,7 @@ export default function App() {
   // Calculate discount
   const calculateDiscount = (total: number, voucher: Voucher | null) => {
     if (!voucher) return 0;
-    
+
     if (voucher.type === 'percentage') {
       return Math.floor(total * (voucher.discount / 100));
     } else {
@@ -535,7 +540,7 @@ export default function App() {
     const updatedOrders = [order, ...orders];
     setOrders(updatedOrders);
     localStorage.setItem('coffee-orders', JSON.stringify(updatedOrders));
-    
+
     setCompletedOrder(order);
     setCart([]);
     setAppliedVoucher(null);
@@ -545,7 +550,7 @@ export default function App() {
 
   // Update order status
   // const updateOrderStatus = (orderId: string, status: Order['status']) => {
-  //   const updatedOrders = orders.map(order => 
+  //   const updatedOrders = orders.map(order =>
   //     order.id === orderId ? { ...order, status } : order
   //   );
   //   setOrders(updatedOrders);
@@ -554,15 +559,15 @@ export default function App() {
 
   // Handle feedback submission
   const handleFeedbackSubmission = (orderId: string, rating: number, feedback: string) => {
-    const updatedOrders = orders.map(order => 
+    const updatedOrders = orders.map(order =>
       order.id === orderId ? { ...order, feedbackGiven: true } : order
     );
     setOrders(updatedOrders);
     localStorage.setItem('coffee-orders', JSON.stringify(updatedOrders));
-    
+
     // In a real app, you'd send this to your backend
     console.log('Feedback submitted:', { orderId, rating, feedback });
-    
+
     setShowFeedbackModal(false);
     setFeedbackOrder(null);
   };
@@ -589,7 +594,7 @@ export default function App() {
   const filteredItems = menuItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     if (!matchesSearch) return false;
 
     switch (selectedCategory) {
@@ -602,8 +607,8 @@ export default function App() {
       case "Most Ordered":
         return (item.orderCount || 0) >= 150;
       case "Last Order":
-        const lastOrderItemIds = getLastOrderItems();
-        return lastOrderItemIds.includes(item.id);
+        { const lastOrderItemIds = getLastOrderItems();
+        return lastOrderItemIds.includes(item.id); }
       default:
         return item.category === selectedCategory;
     }
@@ -789,8 +794,8 @@ export default function App() {
 
   if (showSettings) {
     return (
-      <SettingsPage 
-        onBack={resetToMainMenu} 
+      <SettingsPage
+        onBack={resetToMainMenu}
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
       />
@@ -799,8 +804,8 @@ export default function App() {
 
   if (showNotifications) {
     return (
-      <NotificationsPage 
-        onBack={resetToMainMenu} 
+      <NotificationsPage
+        onBack={resetToMainMenu}
         notifications={notifications}
         onMarkAsRead={markNotificationAsRead}
         onShowOrderDetail={handleShowOrderDetail}
@@ -885,18 +890,18 @@ export default function App() {
         showNavDrawer ? 'translate-x-0' : '-translate-x-full'
       }`}>
         {/* Blurred Background from Menu UI */}
-        <div 
+        <div
           className={`absolute inset-0 bg-black/20 backdrop-blur-md transition-opacity duration-300 ease-in-out ${
             showNavDrawer ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           onClick={() => setShowNavDrawer(false)}
         />
-        
+
         {/* Drawer */}
         <div className={`absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-gradient-to-b from-[#167dda] to-[#104779] shadow-2xl transform transition-transform duration-300 ease-in-out ${
           showNavDrawer ? 'translate-x-0' : '-translate-x-full'
         }`}>
-          <NavigationDrawer 
+          <NavigationDrawer
             user={user}
             onClose={() => setShowNavDrawer(false)}
             onShowOrderHistory={handleShowOrderHistory}
@@ -917,11 +922,11 @@ export default function App() {
       {showMenuDetail && selectedMenuItem && (
         <div className="fixed inset-0 z-50">
           {/* Clickable Blurred Background */}
-          <div 
-            className="absolute inset-0 bg-black/20 backdrop-blur-md cursor-pointer" 
+          <div
+            className="absolute inset-0 bg-black/20 backdrop-blur-md cursor-pointer"
             onClick={() => setShowMenuDetail(false)}
           />
-          
+
           <MenuDetailOverlay
             item={selectedMenuItem}
             menuItems={menuItems}
@@ -930,7 +935,7 @@ export default function App() {
             onAddToCart={addToCart}
             onSaveFavorite={saveFavorite}
             onRemoveFavorite={removeFavorite}
-            isItemFavorited={isItemFavorited}
+            getFavoriteItem={getFavoriteItem}
             onComboItemAdd={handleComboItemAdd}
           />
         </div>
@@ -956,18 +961,18 @@ export default function App() {
         <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm relative">
           <div className="flex items-center px-5 py-4">
             <div className="w-8 flex justify-start">
-              <button 
+              <button
                 onClick={() => setShowNavDrawer(true)}
                 className="relative w-8 h-8 rounded-lg transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
               >
                 <AnimatedHamburgerIcon isOpen={showNavDrawer} />
               </button>
             </div>
-            
+
             <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <Logo />
             </div>
-            
+
             {/* Notification Button in Header */}
             <div className="w-8 flex justify-end">
               <button
@@ -982,7 +987,7 @@ export default function App() {
                 )}
               </button>
             </div>
-            
+
             {/* Connection Status Indicator */}
             <div className="absolute top-2 right-2">
               {!isOnline && (
@@ -1003,7 +1008,7 @@ export default function App() {
             {/* Error States */}
             {(loadingState === 'error' || loadingState === 'timeout' || loadingState === 'offline') && (
               <div className="space-y-4">
-                <ErrorState 
+                <ErrorState
                   state={loadingState}
                   onRetry={handleRetry}
                   retryCount={retryCount}
@@ -1021,17 +1026,17 @@ export default function App() {
             {loadingState === 'success' && (
               <>
                 {/* Search Section */}
-                <SearchSection 
+                <SearchSection
                   searchTerm={searchTerm}
                   onSearchChange={setSearchTerm}
                   selectedCategory={selectedCategory}
                   onCategoryChange={setSelectedCategory}
                   lastOrderItems={getLastOrderItems()}
                 />
-                
+
                 {/* Favorites Section */}
                 {favorites.length > 0 && (
-                  <FavoritesSection 
+                  <FavoritesSection
                     favorites={favorites}
                     menuItems={menuItems}
                     onReorder={(favorite) => {
@@ -1042,7 +1047,7 @@ export default function App() {
                     }}
                   />
                 )}
-                
+
                 {/* Menu Items */}
                 <div className="space-y-4">
                   {filteredItems.map((item) => (
@@ -1057,8 +1062,8 @@ export default function App() {
                       onToggleFavorite={(item) => {
                         const defaultCustomizations = { size: 'Regular', milk: 'Regular', toppings: [], notes: '' };
                         if (isItemFavorited(item.id, defaultCustomizations)) {
-                          const favorite = favorites.find(fav => 
-                            fav.menuItemId === item.id && 
+                          const favorite = favorites.find(fav =>
+                            fav.menuItemId === item.id &&
                             JSON.stringify(fav.customizations) === JSON.stringify(defaultCustomizations)
                           );
                           if (favorite) {

@@ -1,7 +1,5 @@
-import LogoWhite from "./assets/LogoWhite.png";
-import {
-  UserUser,
-} from "../types";
+import LogoWhite from "@/assets/LogoWhite.png";
+import { UserUser } from "@/types";
 
 import { User, LogOut, FileText, Settings, Shield, History, Heart, HelpCircle, MessageCircle } from "lucide-react";
 import { Button } from "./ui/button";
